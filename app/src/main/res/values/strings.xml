@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">doubletapp_hw</string>
+    <string name="title_activity_second">SecondActivity</string>
+</resources>
