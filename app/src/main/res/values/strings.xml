@@ -1,4 +1,21 @@
 <resources>
     <string name="app_name">doubletapp_hw</string>
     <string name="title_activity_second">SecondActivity</string>
+    <string name="add">Добавить</string>
+    <string name="add_habit">Добавьте привычку</string>
+    <string name="habit_name">Название привычки</string>
+    <string name="description">Описание</string>
+    <string name="priority">Приоритет:</string>
+    <string name="positive">Положительная</string>
+    <string name="negative">Отрицательная</string>
+    <string name="frequency">Количество</string>
+    <string name="period">Периодичность</string>
+    <string name="back">Назад</string>
+    <string name="save">Сохранить</string>
+    <string name="pick_colour">Выбрать цвет</string>
+    <string name="drop_down">Раскрыть</string>
+    <string name="drop_up">Скрыть</string>
+    <string name="hight">Высокий</string>
+    <string name="mid">Средний</string>
+    <string name="low">Низкий</string>
 </resources>
