@@ -1,47 +1,57 @@
 package com.doubletapp_hw
 
-import android.content.Intent
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.doubletapp_hw.ui.theme.Dobletapp_hwTheme
+import com.doubletapp_hw.screens.HabitEditScreen
+import com.doubletapp_hw.screens.HabitsPagerScreen
+import com.doubletapp_hw.screens.InfoScreen
+import com.doubletapp_hw.screens.Routes
+import kotlinx.coroutines.launch
 
 class FirstActivity : ComponentActivity() {
     private val viewModel by viewModels<HabitListViewModel>()
-    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,99 +59,102 @@ class FirstActivity : ComponentActivity() {
         setContent {
             Dobletapp_hwTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                   // modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-
-                    HabitListScreen(viewModel)
+                    AppNavigation(viewModel)
                 }
             }
         }
-
-
-        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
-                val habit = result.data?.extras?.getSerializable("habit", Habit::class.java) ?: Habit()
-                if (!viewModel.updateHabit(habit)) viewModel.addHabit(habit)
-            }
-        }
-
     }
 
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun HabitListScreen(viewModel: HabitListViewModel) {
-        val habits by viewModel.habits.collectAsState()
+    fun AppNavigation(viewModel: HabitListViewModel) {
+        val navController = rememberNavController()
+        val scope = rememberCoroutineScope()
+        val drawerState = rememberDrawerState(DrawerValue.Closed)
+        var isNavEnabled by remember { mutableStateOf(true) }
 
-        Scaffold(
-            floatingActionButton = {
-                FloatingActionButton(onClick = {
-                    val intent = Intent(this, SecondActivity::class.java).apply {
-                        putExtra("habit", Habit())
+        val items = listOf(
+            Icons.Default.Home to stringResource(R.string.home) to Routes.Home,
+            Icons.Default.Info to stringResource(R.string.info) to Routes.Info
+        )
+        val selectedItem = remember { mutableStateOf(items[0]) }
+
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                if (true){
+                    ModalDrawerSheet {
+                        Spacer(Modifier.height(12.dp))
+                        items.forEach { item ->
+                            NavigationDrawerItem(
+                                icon = { Icon(item.first.first, contentDescription = null) },
+                                label = { Text(item.first.second) },
+                                selected = item == selectedItem.value,
+                                onClick = {
+                                    scope.launch { drawerState.close() }
+                                    selectedItem.value = item
+                                    navController.navigate(item.second.route){
+                                        popUpTo(0)
+                                    }
+                                },
+                                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                            )
+                        }
                     }
-                    activityResultLauncher.launch(intent)
-                }) {
-                    Icon(Icons.Filled.Add, contentDescription = getString(R.string.add))
                 }
-            }
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
-                state = LazyListState()
-            ) {
-                items(habits) { habit ->
-                    HabitItem(habit = habit)
-                }
-            }
-            if (habits.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(), // Заполняет весь экран
-                    contentAlignment = Alignment.Center // Центрирует содержимое
+
+            },
+            content = {
+                Scaffold(
+                    topBar = {
+                        if (isNavEnabled) {
+                            TopAppBar(
+                                title = {
+                                    Text(
+                                        selectedItem.value.first.second,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                navigationIcon = {
+                                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Menu,
+                                            contentDescription = "Open Navigation Drawer"
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
                 ) {
-                    Text(
-                        text = getString(R.string.add_habit),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-            }
-        }
-    }
+                    NavHost(navController = navController, startDestination = Routes.Home.route) {
+                        composable(Routes.Home.route) {
+                            isNavEnabled = true
 
-    @Composable
-    fun HabitItem(habit: Habit) {
-        Card(
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 6.dp
-            ),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(habit.color.value)
-            ),
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-                .clickable {
-                    val intent = Intent(this, SecondActivity::class.java).apply {
-                        putExtra("habit", habit)
+                            HabitsPagerScreen(viewModel, navController)
+                        }
+                        composable(Routes.Info.route) {
+                            isNavEnabled = true
+                            scope.launch { drawerState.close() }
+                            InfoScreen(navController)
+                        }
+                        composable(
+                            "${Routes.HabitEdit.route}/{habitId}", // Маршрут с параметром "habitId"
+                            arguments = listOf(navArgument("habitId") { type = NavType.StringType })
+                        ) {
+                            backStackEntry ->
+                            val habitId = backStackEntry.arguments?.getString("habitId")
+                            isNavEnabled = false
+                            HabitEditScreen(habitId = habitId!!, viewModel, navController)
+                        }
                     }
-                    activityResultLauncher.launch(intent)
                 }
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = habit.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = if (habit.color.luminance() < 0.5) Color.White else Color.Black
-                )
-                Text(
-                    text = habit.description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = if (habit.color.luminance() < 0.5) Color.White else Color.Black,
-                )
             }
-        }
+        )
     }
 }
