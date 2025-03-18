@@ -9,6 +9,19 @@ class HabitListViewModel: ViewModel() {
     private val _habits = MutableStateFlow<List<Habit>>(listOf())
     val habits: StateFlow<List<Habit>> get() = _habits.asStateFlow()
 
+    fun saveHabit(habit: Habit) {
+        _habits.value.let { habitsList ->
+            val updatedList = habitsList.toMutableList()
+            val index = updatedList.indexOfFirst { it.id == habit.id }
+            if (index != -1) {
+                updatedList[index] = habit
+            } else {
+                updatedList.add(habit)
+            }
+            _habits.value = updatedList
+        }
+    }
+
     fun addHabit(habit: Habit): String {
         val updatedList = _habits.value.toMutableList()
         updatedList.add(habit)
@@ -35,15 +48,9 @@ class HabitListViewModel: ViewModel() {
             _habits.value = updatedList
         }
     }
+    }*/
 
     fun getById(habitId: String): Habit? {
-        _habits.value.let { habitsList ->
-            val updatedList = habitsList.toMutableList()
-            val index = updatedList.indexOfFirst { it.id == habitId }
-            if (index != -1) {
-                return habitsList[index]
-            }
-        }
-        return null
-    }*/
+        return _habits.value.find { it.id == habitId }
+    }
 }
