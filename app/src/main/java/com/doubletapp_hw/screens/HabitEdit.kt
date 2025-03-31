@@ -26,6 +26,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -46,21 +47,21 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.doubletapp_hw.Habit
 import com.doubletapp_hw.HabitListViewModel
+import com.doubletapp_hw.HabitPriority
+import com.doubletapp_hw.HabitType
+//import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
 import java.util.UUID
 
 @Composable
-fun HabitEditScreen(habitId: String, viewModel: HabitListViewModel, navController: NavController) {
+fun HabitEditScreen(habitId: String, viewModel: HabitListViewModel,
+                    onSave: (Habit) -> Unit, onBack: () -> Unit) {
     val isNewHabit = habitId == "new"
     var habit by remember(habitId) {
         mutableStateOf(if (isNewHabit) Habit() else viewModel.getById(habitId) ?: Habit())
     }
 
-    val priorityOptions = listOf(
-        stringResource(R.string.low),
-        stringResource(R.string.mid),
-        stringResource(R.string.hight)
-    )
+    val priorityOptions = HabitPriority.entries.toTypedArray()
     val scrollState = rememberScrollState()
 
     Column(
@@ -85,16 +86,26 @@ fun HabitEditScreen(habitId: String, viewModel: HabitListViewModel, navControlle
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(stringResource(R.string.priority))
-        ExposedDropdownMenuBox(priorityOptions, habit.priority) { selectedIndex ->
-            habit = habit.copy(priority = selectedIndex)
+        ExposedDropdownMenuBox(priorityOptions.map { stringResource(it.labelResId) },
+            habit.priority.ordinal) { selectedIndex ->
+            habit = habit.copy(priority = priorityOptions[selectedIndex])
         }
 
         Row(modifier = Modifier.padding(vertical = 8.dp)) {
             RadioButtonGroup(
-                options = listOf(stringResource(R.string.positive), stringResource(R.string.negative)),
-                selectedOption = habit.type
-            ) { selectedType ->
-                habit = habit.copy(type = selectedType)
+                // Передаём сами элементы enum как опции
+                options = listOf(
+                    stringResource(R.string.positive),
+                    stringResource( R.string.negative)
+                ),
+                // Выбираем индекс текущего типа
+                selectedOption = stringResource( habit.type.labelResId)
+            ) { selectedIndex ->
+                // Устанавливаем тип привычки на основе выбранного индекса
+                habit = when(selectedIndex) {
+                    "Положительная" -> habit.copy(type = HabitType.POSITIVE)
+                    else-> habit.copy(type = HabitType.NEGATIVE)
+                }
             }
         }
 
@@ -131,7 +142,7 @@ fun HabitEditScreen(habitId: String, viewModel: HabitListViewModel, navControlle
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                onClick = { navController.popBackStack() }
+                onClick = onBack
             ) {
                 Text(stringResource(R.string.back))
             }
@@ -139,13 +150,7 @@ fun HabitEditScreen(habitId: String, viewModel: HabitListViewModel, navControlle
             Spacer(modifier = Modifier.width(16.dp))
 
             Button(
-                onClick = {
-                    val updatedHabit = habit.copy(
-                        id = if (isNewHabit) UUID.randomUUID().toString() else habit.id
-                    )
-                    viewModel.saveHabit(updatedHabit)
-                    navController.popBackStack()
-                }
+                onClick = { onSave(habit) }
             ) {
                 Text(stringResource(R.string.save))
             }
@@ -168,7 +173,7 @@ fun ExposedDropdownMenuBox(options: List<String>, selectedIndex: Int, onSelect: 
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor()
+                modifier = Modifier.menuAnchor(type= MenuAnchorType.PrimaryEditable, enabled=true)
             )
 
             ExposedDropdownMenu(
@@ -187,7 +192,9 @@ fun ExposedDropdownMenuBox(options: List<String>, selectedIndex: Int, onSelect: 
 }
 
 @Composable
-fun RadioButtonGroup(options: List<String>, selectedOption: String, onOptionSelected: (String) -> Unit) {
+fun RadioButtonGroup(options: List<String>,
+                     selectedOption: String,
+                     onOptionSelected: (String) -> Unit) {
     Column {
         options.forEach { option ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -244,7 +251,9 @@ fun ColorCard(selectedColor: Color, onColorSelected: (Color) -> Unit){
                 ColorPicker(selectedColor = selectedColor, onColorSelected)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "RGB: (${(selectedColor.red * 255).toInt()}, ${(selectedColor.green * 255).toInt()}, ${(selectedColor.blue * 255).toInt()})\n" +
+                    text = "RGB: (${(selectedColor.red * 255).toInt()}, " +
+                            "${(selectedColor.green * 255).toInt()}, " +
+                            "${(selectedColor.blue * 255).toInt()})\n" +
                             "HSV: ${selectedColor.toHSVString()}",
                     color = if (selectedColor.luminance() < 0.5) Color.White else Color.Black
                 )
@@ -256,7 +265,7 @@ fun ColorCard(selectedColor: Color, onColorSelected: (Color) -> Unit){
 @Composable
 fun ColorPicker(selectedColor: Color, onColorSelected: (Color) -> Unit) {
     val colors = (0..15).map { Color.hsv(it * 360f / 16f, 1f, 1f) } // Цвета квадратов
-    val backgroundBrush = Brush.horizontalGradient(colors.map { it }) // Градиент для фона
+    val backgroundBrush = Brush.horizontalGradient(colors.map { it }) // Remember
 
     Box(
         modifier = Modifier
@@ -278,7 +287,8 @@ fun ColorPicker(selectedColor: Color, onColorSelected: (Color) -> Unit) {
                     modifier = Modifier
                         .size(70.dp)
                         .background(
-                            color = if (color == selectedColor) Color.White else Color(255, 255, 255, 127),
+                            color = if (color == selectedColor) Color.White
+                            else Color(255, 255, 255, 127),
                             shape = RoundedCornerShape(8.dp)
                         )
                 ) {

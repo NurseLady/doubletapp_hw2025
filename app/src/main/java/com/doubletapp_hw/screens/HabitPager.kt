@@ -15,16 +15,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,26 +32,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.doubletapp_hw.Habit
 import com.doubletapp_hw.HabitListViewModel
+import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitsPagerScreen(viewModel: HabitListViewModel, navController: NavController) {
+fun HabitsPagerScreen(viewModel: HabitListViewModel, onNavigate: (String) -> Unit) {
     val coroutineScope = rememberCoroutineScope()
-    val pages = listOf(
-        stringResource(R.string.positive),
-        stringResource(R.string.negative)
-    )
-    val pagerState = rememberPagerState { pages.size } // Начальная страница - 0 (хорошие привычки)
+    val pages = HabitType.entries.toList()
+    val pagerState = rememberPagerState { pages.size }
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController.navigate("${Routes.HabitEdit.route}/new")
+                onNavigate("new")
             }) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add))
             }
@@ -64,7 +57,6 @@ fun HabitsPagerScreen(viewModel: HabitListViewModel, navController: NavControlle
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .padding(top = 56.dp)
         ) {
             // Вкладки для переключения между страницами
             TabRow(
@@ -76,10 +68,12 @@ fun HabitsPagerScreen(viewModel: HabitListViewModel, navController: NavControlle
                         selected = pagerState.currentPage == index,
                         onClick = {
                             coroutineScope.launch {
-                                pagerState.scrollToPage(index)
+                                pagerState.animateScrollToPage(index)
                             }
                         },
-                        text = { Text(page) }
+                        text = {
+                            Text(text = stringResource(id = page.labelResId))
+                        }
                     )
                 }
             }
@@ -88,19 +82,14 @@ fun HabitsPagerScreen(viewModel: HabitListViewModel, navController: NavControlle
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f)
-            ) { page ->
-                when (page) {
-                    0 -> HabitListByTypeScreen(
-                        type = stringResource(R.string.positive),
-                        viewModel = viewModel,
-                        navController = navController
-                    )
-                    1 -> HabitListByTypeScreen(
-                        type = stringResource(R.string.negative),
-                        viewModel = viewModel,
-                        navController = navController
-                    )
-                }
+            ) { pageIndex ->
+                // Определение типа привычек на основе текущей позиции в пейджере
+                val habitType = pages[pageIndex]
+                HabitListByTypeScreen(
+                    type = habitType,
+                    viewModel = viewModel,
+                    onNavigate = onNavigate
+                )
             }
         }
     }
@@ -108,13 +97,13 @@ fun HabitsPagerScreen(viewModel: HabitListViewModel, navController: NavControlle
 
 @Composable
 fun HabitListByTypeScreen(
-    type: String,
+    type: HabitType,
     viewModel: HabitListViewModel,
-    navController: NavController
+    onNavigate: (String) -> Unit
 ) {
     val habits by viewModel.habits.collectAsState()
 
-    val habitsOfType = habits.filter { it.type == type || it.type == "" }
+    val habitsOfType = habits.filter { it.type == type }
     if (habitsOfType.isEmpty()) {
         Box(
             modifier = Modifier
@@ -136,7 +125,7 @@ fun HabitListByTypeScreen(
     ) {
         items(habitsOfType) { habit ->
             HabitItem(habit = habit) {
-                navController.navigate("${Routes.HabitEdit.route}/${habit.id}")
+                onNavigate(habit.id)
             }
         }
     }

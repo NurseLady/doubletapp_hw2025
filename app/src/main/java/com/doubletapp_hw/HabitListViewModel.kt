@@ -22,7 +22,7 @@ class HabitListViewModel: ViewModel() {
         }
     }
 
-    fun addHabit(habit: Habit): String {
+/*    fun addHabit(habit: Habit): String {
         val updatedList = _habits.value.toMutableList()
         updatedList.add(habit)
         _habits.value = updatedList
@@ -40,7 +40,7 @@ class HabitListViewModel: ViewModel() {
             }
         }
         return false
-    }
+    }*/
 
 /*    fun deleteHabit(habitId: String) {
         _habits.value.let { habitsList ->
