@@ -18,4 +18,8 @@
     <string name="hight">Высокий</string>
     <string name="mid">Средний</string>
     <string name="low">Низкий</string>
+    <string name="home">Главная</string>
+    <string name="habit_list">Список привычек</string>
+    <string name="info">О приложении</string>
+    <string name="edit_habit">Редактирование привычки</string>
 </resources>
