@@ -22,4 +22,11 @@
     <string name="habit_list">Список привычек</string>
     <string name="info">О приложении</string>
     <string name="edit_habit">Редактирование привычки</string>
+    <string name="filter">Сортировка</string>
+    <string name="search_by_name">Поиск по назуванию</string>
+    <string name="sort_alphabetically">Сортировать по алфавиту</string>
+    <string name="cancel">Отмена\n</string>
+    <string name="apply">Применить</string>
+    <string name="no_habits_found">Не нашлось ни одной привычки :(</string>
+    <string name="sort_edititme">Сортировать по времени редактирования</string>
 </resources>
