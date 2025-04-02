@@ -152,7 +152,6 @@ fun HabitEditScreen(habitId: String,
             Button(
                 onClick = {
                     onSave(habit)
-                    Log.d("HabitEdti", "Habit: ${habitEditViewModel.getHabitById(habit.id)} ${habit.id}")
                 }
             ) {
                 Text(stringResource(R.string.save))

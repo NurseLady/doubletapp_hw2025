@@ -55,6 +55,8 @@ import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
 import com.doubletapp_hw.viewModels.HabitListViewModel
 import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun HabitsPagerScreen(onNavigate: (String) -> Unit) {
@@ -180,6 +182,13 @@ fun HabitItem(habit: Habit, onClick: () -> Unit) {
             Text(
                 text = habit.description,
                 style = MaterialTheme.typography.bodyLarge,
+                color = if (habit.color.luminance() < 0.5) Color.White else Color.Black,
+            )
+            Text(
+                text = habit.lastEdited.format(
+                    DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale("ru"))
+                ),
+                style = MaterialTheme.typography.bodySmall,
                 color = if (habit.color.luminance() < 0.5) Color.White else Color.Black,
             )
         }

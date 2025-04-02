@@ -44,6 +44,7 @@ import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.ui.theme.Dobletapp_hwTheme
 import com.doubletapp_hw.viewModels.HabitEditViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 class FirstActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -139,7 +140,8 @@ fun AppNavigation() {
                             onBack = { navController.popBackStack()},
                             onSave = { habit ->
                             val updatedHabit = habit.copy(
-                                id = habit.id
+                                id = habit.id,
+                                lastEdited = LocalDateTime.now()
                             )
                             habitEditViewModel.saveHabit(updatedHabit)
                             navController.popBackStack()
