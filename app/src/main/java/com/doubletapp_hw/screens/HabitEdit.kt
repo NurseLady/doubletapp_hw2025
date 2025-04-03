@@ -44,21 +44,20 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.doubletapp_hw.Habit
-import com.doubletapp_hw.HabitListViewModel
 import com.doubletapp_hw.HabitPriority
 import com.doubletapp_hw.HabitType
-//import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
-import java.util.UUID
+import com.doubletapp_hw.viewModels.HabitEditViewModel
+import java.time.LocalDateTime
 
 @Composable
-fun HabitEditScreen(habitId: String, viewModel: HabitListViewModel,
-                    onSave: (Habit) -> Unit, onBack: () -> Unit) {
+fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
     val isNewHabit = habitId == "new"
+    val habitEditViewModel: HabitEditViewModel = viewModel()
     var habit by remember(habitId) {
-        mutableStateOf(if (isNewHabit) Habit() else viewModel.getById(habitId) ?: Habit())
+        mutableStateOf(if (isNewHabit) Habit() else habitEditViewModel.getHabitById(habitId) ?: Habit())
     }
 
     val priorityOptions = HabitPriority.entries.toTypedArray()
@@ -150,7 +149,14 @@ fun HabitEditScreen(habitId: String, viewModel: HabitListViewModel,
             Spacer(modifier = Modifier.width(16.dp))
 
             Button(
-                onClick = { onSave(habit) }
+                onClick = {
+                    val updatedHabit = habit.copy(
+                        id = habit.id,
+                        lastEdited = LocalDateTime.now()
+                    )
+                    habitEditViewModel.saveHabit(updatedHabit)
+                    onBack()
+                }
             ) {
                 Text(stringResource(R.string.save))
             }

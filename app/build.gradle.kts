@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.doubletapp_hw"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -64,6 +64,8 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2025.03.00"))
     implementation ("com.google.accompanist:accompanist-pager:0.36.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.36.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.benchmark:benchmark-macro:1.3.4")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
