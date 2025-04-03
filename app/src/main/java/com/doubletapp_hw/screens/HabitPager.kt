@@ -15,9 +15,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.SnackbarHost
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberBottomSheetScaffoldState
@@ -75,19 +77,21 @@ fun HabitsPagerScreen(onNavigate: (String) -> Unit) {
             )
         },
         sheetPeekHeight = 64.dp,
+        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 onNavigate("new")
             }) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add))
             }
-        }
+        },
+        backgroundColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.surface)
+                //.background(MaterialTheme.colorScheme.surface)
         ) {
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
