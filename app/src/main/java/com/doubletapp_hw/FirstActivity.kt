@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -42,9 +41,7 @@ import com.doubletapp_hw.screens.HabitsPagerScreen
 import com.doubletapp_hw.screens.InfoScreen
 import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.ui.theme.Dobletapp_hwTheme
-import com.doubletapp_hw.viewModels.HabitEditViewModel
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 
 class FirstActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -68,7 +65,6 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val habitEditViewModel: HabitEditViewModel = viewModel()
 
     val items = listOf(Routes.Home, Routes.Info)
     val selectedItem = remember { mutableStateOf(items[0]) }
@@ -137,15 +133,7 @@ fun AppNavigation() {
                     composable<Routes.HabitEdit> { backStackEntry ->
                         val edit: Routes.HabitEdit = backStackEntry.toRoute()
                         HabitEditScreen(habitId = edit.id,
-                            onBack = { navController.popBackStack()},
-                            onSave = { habit ->
-                            val updatedHabit = habit.copy(
-                                id = habit.id,
-                                lastEdited = LocalDateTime.now()
-                            )
-                            habitEditViewModel.saveHabit(updatedHabit)
-                            navController.popBackStack()
-                        })
+                            onBack = { navController.popBackStack()})
                     }
                 }
             }

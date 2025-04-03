@@ -1,6 +1,5 @@
 package com.doubletapp_hw.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -51,10 +50,10 @@ import com.doubletapp_hw.HabitPriority
 import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
 import com.doubletapp_hw.viewModels.HabitEditViewModel
+import java.time.LocalDateTime
 
 @Composable
-fun HabitEditScreen(habitId: String,
-                    onSave: (Habit) -> Unit, onBack: () -> Unit) {
+fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
     val isNewHabit = habitId == "new"
     val habitEditViewModel: HabitEditViewModel = viewModel()
     var habit by remember(habitId) {
@@ -151,7 +150,12 @@ fun HabitEditScreen(habitId: String,
 
             Button(
                 onClick = {
-                    onSave(habit)
+                    val updatedHabit = habit.copy(
+                        id = habit.id,
+                        lastEdited = LocalDateTime.now()
+                    )
+                    habitEditViewModel.saveHabit(updatedHabit)
+                    onBack()
                 }
             ) {
                 Text(stringResource(R.string.save))

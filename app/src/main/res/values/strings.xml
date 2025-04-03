@@ -5,7 +5,7 @@
     <string name="add_habit">Добавьте привычку</string>
     <string name="habit_name">Название привычки</string>
     <string name="description">Описание</string>
-    <string name="priority">Приоритет:</string>
+    <string name="priority">Приоритет</string>
     <string name="positive">Положительная</string>
     <string name="negative">Отрицательная</string>
     <string name="frequency">Количество</string>
@@ -23,10 +23,16 @@
     <string name="info">О приложении</string>
     <string name="edit_habit">Редактирование привычки</string>
     <string name="filter">Сортировка</string>
-    <string name="search_by_name">Поиск по назуванию</string>
+    <string name="search_by_name">Поиск по названию</string>
     <string name="sort_alphabetically">Сортировать по алфавиту</string>
-    <string name="cancel">Отмена\n</string>
+    <string name="cancel">Отмена</string>
     <string name="apply">Применить</string>
     <string name="no_habits_found">Не нашлось ни одной привычки :(</string>
     <string name="sort_edititme">Сортировать по времени редактирования</string>
+    <string name="sort_by">Сортировать по:</string>
+    <string name="sort_direction">Направление сортировки:</string>
+    <string name="ascending">По возрастанию</string>
+    <string name="descending">По убыванию</string>
+    <string name="name">Название</string>
+    <string name="date">Дата</string>
 </resources>

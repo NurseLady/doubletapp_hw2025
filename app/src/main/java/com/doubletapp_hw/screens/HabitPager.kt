@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,11 +18,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -54,6 +50,7 @@ import com.doubletapp_hw.Habit
 import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
 import com.doubletapp_hw.viewModels.HabitListViewModel
+import com.doubletapp_hw.viewModels.SortingType
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -74,11 +71,7 @@ fun HabitsPagerScreen(onNavigate: (String) -> Unit) {
             FilterAndSearchSection(
                 inputText = inputText.value,
                 onTextChange = { newText -> inputText.value = newText },
-                onSortingByNameChange = { f -> habitListViewModel.sortByName(f) },
-                onSortingByDateChange = { f -> habitListViewModel.sortByDate(f) },
-                onApplyFilters = {
-                    habitListViewModel.applyFilters(inputText.value)
-                }
+                onSortingChange = { query: String, option: SortingType, isA: Boolean -> habitListViewModel.applyFilters(query, option, isA) }
             )
         },
         sheetPeekHeight = 64.dp,
@@ -199,12 +192,11 @@ fun HabitItem(habit: Habit, onClick: () -> Unit) {
 fun FilterAndSearchSection(
     inputText: String,
     onTextChange: (String) -> Unit,
-    onSortingByNameChange: (Boolean) -> Unit,
-    onSortingByDateChange: (Boolean) -> Unit,
-    onApplyFilters: () -> Unit
+    onSortingChange: (String, SortingType, Boolean) -> Unit
 ) {
-    var isSortingNameAscending by remember { mutableStateOf(false) }
-    var isSortingDateAscending by remember { mutableStateOf(false) }
+    var selectedSortOption by remember { mutableStateOf(SortingType.NAME) }
+    var isAscending by remember { mutableStateOf(true) }
+    val sortOptions = SortingType.entries
 
     Column(
         modifier = Modifier
@@ -212,45 +204,27 @@ fun FilterAndSearchSection(
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(16.dp)
     ) {
-        // Сортировка по алфавиту (по имени)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = stringResource(R.string.sort_alphabetically), modifier = Modifier.weight(1f))
-            IconButton(
-                onClick = {
-                    isSortingNameAscending = !isSortingNameAscending
-                    onSortingByNameChange(isSortingNameAscending)
-                }
-            ) {
-                Icon(
-                    imageVector = if (isSortingNameAscending) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = "placeholder"
-                )
-            }
-        }
+        Text(text = stringResource(R.string.sort_by), style = MaterialTheme.typography.titleMedium)
+        ExposedDropdownMenuBox(
+            options = sortOptions.map { stringResource(it.labelResId) },
+            selectedIndex = sortOptions.indexOf(selectedSortOption),
+            onSelect = { index -> selectedSortOption = sortOptions[index] }
+        )
 
-        // Сортировка по дате (по времени редактирования)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = stringResource(R.string.sort_edititme), modifier = Modifier.weight(1f))
-            IconButton(
-                onClick = {
-                    isSortingDateAscending = !isSortingDateAscending
-                    onSortingByDateChange(isSortingDateAscending)
-                }
-            ) {
-                Icon(
-                    imageVector = if (isSortingDateAscending) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = ""
-                )
-            }
-        }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = stringResource(R.string.sort_direction), style = MaterialTheme.typography.titleMedium)
+        ExposedDropdownMenuBox(
+            options = listOf(
+                stringResource(R.string.ascending),
+                stringResource(R.string.descending)
+            ),
+            selectedIndex = if (isAscending) 0 else 1,
+            onSelect = { index -> isAscending = index == 0 }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
 
         TextField(
             value = inputText,
@@ -261,14 +235,16 @@ fun FilterAndSearchSection(
                 imeAction = ImeAction.Search
             ),
             keyboardActions = KeyboardActions(
-                onSearch = { onApplyFilters() }
+                onSearch = { onSortingChange(inputText, selectedSortOption, isAscending) }
             )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = onApplyFilters,
+            onClick = {
+                onSortingChange(inputText, selectedSortOption, isAscending)
+            },
             modifier = Modifier.align(Alignment.End)
         ) {
             Text(stringResource(R.string.apply))

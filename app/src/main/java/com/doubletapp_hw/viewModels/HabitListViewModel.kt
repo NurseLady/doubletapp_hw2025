@@ -3,6 +3,7 @@ package com.doubletapp_hw.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.doubletapp_hw.Habit
+import com.doubletapp_hw.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,25 +28,29 @@ class HabitListViewModel : ViewModel() {
         }
     }
 
-    fun applyFilters(query: String) {
-        _filteredHabits.value  = habits.value.filter {
+    fun applyFilters(query: String, sortOption: SortingType, ascending: Boolean) {
+        val filteredList = habits.value.filter {
             it.name.contains(query, ignoreCase = true)
         }
-    }
+        _filteredHabits.value = when (sortOption) {
+            SortingType.NAME -> {
+                if (ascending) filteredList.sortedBy { it.name } else filteredList.sortedByDescending { it.name }
+            }
 
-    fun sortByName(ascending: Boolean) {
-        _filteredHabits.value = if (ascending) {
-            habits.value.sortedBy { it.name }
-        } else {
-            habits.value.sortedByDescending { it.name }
-        }
-    }
+            SortingType.DATE -> {
+                if (ascending) filteredList.sortedBy { it.lastEdited } else filteredList.sortedByDescending { it.lastEdited }
+            }
 
-    fun sortByDate(ascending: Boolean) {
-        _filteredHabits.value = if (ascending) {
-            habits.value.sortedBy { it.lastEdited }
-        } else {
-            habits.value.sortedByDescending { it.lastEdited }
+            SortingType.PRIORITY -> {
+                if (ascending) filteredList.sortedBy { it.priority } else filteredList.sortedByDescending { it.priority.ordinal }
+            }
         }
     }
 }
+
+enum class SortingType(val labelResId: Int) {
+    NAME(R.string.name),
+    DATE(R.string.date),
+    PRIORITY(R.string.priority)
+}
+
