@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,9 +26,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,7 +70,9 @@ fun AppNavigation() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
     val items = listOf(Routes.Home, Routes.Info)
-    val selectedItem = remember { mutableStateOf(items[0]) }
+    var selectedItem by remember { mutableStateOf(items[0]) }
+
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -78,10 +83,10 @@ fun AppNavigation() {
                     NavigationDrawerItem(
                         icon = { Icon(item.icon, contentDescription = null) },
                         label = { Text(stringResource(item.title)) },
-                        selected = item == selectedItem.value,
+                        selected = item == selectedItem,
                         onClick = {
                             scope.launch { drawerState.close() }
-                            selectedItem.value = item
+                            selectedItem = item
                             navController.navigate(item){
                                 popUpTo(0)
                             }
@@ -97,7 +102,7 @@ fun AppNavigation() {
                     TopAppBar(
                         title = {
                             Text(
-                                stringResource( selectedItem.value.title),
+                                stringResource(selectedItem.title),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -109,6 +114,20 @@ fun AppNavigation() {
                                     contentDescription = "Open Navigation Drawer"
                                 )
                             }
+                        },
+                        actions = {
+                            if (selectedItem == Routes.Home) {
+                                IconButton(
+                                    onClick = {
+                                        showBottomSheet = true
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Search,
+                                        contentDescription = stringResource(R.string.search)
+                                    )
+                                }
+                            }
                         }
                     )
                 }
@@ -119,13 +138,17 @@ fun AppNavigation() {
                     startDestination = Routes.Home
                 ) {
                     composable<Routes.Home> {
-                        HabitsPagerScreen { id ->
-                            navController.navigate(
-                                Routes.HabitEdit(
-                                    id
+                        HabitsPagerScreen(
+                            onNavigate = { id ->
+                                navController.navigate(
+                                    Routes.HabitEdit(id)
                                 )
-                            )
-                        }
+                            },
+                            showBottomSheet = showBottomSheet,
+                            onShowBottomSheetChange = {
+                                showBottomSheet = it
+                            } // Обновляем состояние
+                        )
                     }
                     composable<Routes.Info> {
                         InfoScreen()

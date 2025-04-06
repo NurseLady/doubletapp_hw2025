@@ -22,12 +22,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -54,13 +49,12 @@ import java.time.LocalDateTime
 
 @Composable
 fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
-    val isNewHabit = habitId == "new"
     val habitEditViewModel: HabitEditViewModel = viewModel()
     var habit by remember(habitId) {
-        mutableStateOf(if (isNewHabit) Habit() else habitEditViewModel.getHabitById(habitId) ?: Habit())
+        mutableStateOf(habitEditViewModel.getHabitById(habitId) ?: Habit())
     }
 
-    val priorityOptions = HabitPriority.entries.toTypedArray()
+    val priorityOptions = HabitPriority.entries
     val scrollState = rememberScrollState()
 
     Column(
@@ -85,7 +79,8 @@ fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(stringResource(R.string.priority))
-        ExposedDropdownMenuBox(priorityOptions.map { stringResource(it.labelResId) },
+        DropdownMenuBox(
+            priorityOptions.map { stringResource(it.labelResId) },
             habit.priority.ordinal) { selectedIndex ->
             habit = habit.copy(priority = priorityOptions[selectedIndex])
         }
@@ -164,55 +159,6 @@ fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ExposedDropdownMenuBox(options: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        androidx.compose.material3.ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            TextField(
-                value = options[selectedIndex],
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor(type= MenuAnchorType.PrimaryEditable, enabled=true)
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                options.forEachIndexed { index, option ->
-                    DropdownMenuItem(onClick = {
-                        onSelect(index)
-                        expanded = false
-                    }, text = { Text(option) })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun RadioButtonGroup(options: List<String>,
-                     selectedOption: String,
-                     onOptionSelected: (String) -> Unit) {
-    Column {
-        options.forEach { option ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = option == selectedOption,
-                    onClick = { onOptionSelected(option) }
-                )
-                Text(text = option)
-            }
-        }
-    }
-}
 
 @Composable
 fun ColorCard(selectedColor: Color, onColorSelected: (Color) -> Unit){
@@ -271,7 +217,7 @@ fun ColorCard(selectedColor: Color, onColorSelected: (Color) -> Unit){
 @Composable
 fun ColorPicker(selectedColor: Color, onColorSelected: (Color) -> Unit) {
     val colors = (0..15).map { Color.hsv(it * 360f / 16f, 1f, 1f) } // Цвета квадратов
-    val backgroundBrush = Brush.horizontalGradient(colors.map { it }) // Remember
+    val backgroundBrush = remember { Brush.horizontalGradient(colors.map { it }) }
 
     Box(
         modifier = Modifier

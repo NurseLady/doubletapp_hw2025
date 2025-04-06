@@ -35,4 +35,5 @@
     <string name="descending">По убыванию</string>
     <string name="name">Название</string>
     <string name="date">Дата</string>
+    <string name="search">Поиск</string>
 </resources>

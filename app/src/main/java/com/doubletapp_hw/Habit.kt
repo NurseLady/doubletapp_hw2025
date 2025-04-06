@@ -16,14 +16,3 @@ data class Habit(
     var color: Color = Color(127, 127,127, 255),
     var lastEdited: LocalDateTime = LocalDateTime.now()
 ): Serializable
-
-enum class HabitPriority(val labelResId: Int) {
-    LOW(R.string.low),
-    MID(R.string.mid),
-    HIGH(R.string.hight);
-}
-
-enum class HabitType(val labelResId: Int) {
-    POSITIVE(R.string.positive),
-    NEGATIVE(R.string.negative);
-}
