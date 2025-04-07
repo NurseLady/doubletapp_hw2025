@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import java.util.Locale
 
 class HabitListViewModel : ViewModel() {
     private val habitRepository = HabitRepository
@@ -28,8 +29,8 @@ class HabitListViewModel : ViewModel() {
 
         when (currentSortOption) {
             SortingType.NAME -> {
-                if (isAscending) filteredList.sortedBy { it.name }
-                else filteredList.sortedByDescending { it.name }
+                if (isAscending) filteredList.sortedBy { it.name.lowercase(Locale.ROOT) }
+                else filteredList.sortedByDescending { it.name.lowercase(Locale.ROOT) }
             }
 
             SortingType.DATE -> {
