@@ -1,49 +1,32 @@
 package com.doubletapp_hw.viewModels
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.map
 import com.doubletapp_hw.Habit
+import com.doubletapp_hw.HabitRepository
 import com.doubletapp_hw.SortingType
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import java.util.Locale
 
-class HabitListViewModel : ViewModel() {
-    private val habitRepository = HabitRepository
-
-    private val habits: StateFlow<List<Habit>> = habitRepository.getHabitsFlow()
-
+class HabitListViewModel(private val habitRepository: HabitRepository) : ViewModel() {
+    val habits: LiveData<List<Habit>> = habitRepository.habits
     private val query = MutableStateFlow("")
     private val sortOption = MutableStateFlow(SortingType.NAME)
     private val ascending = MutableStateFlow(true)
 
-    val filteredHabits: StateFlow<List<Habit>> = combine(
-        habits, query, sortOption, ascending
-    ) { currentHabits, currentQuery, currentSortOption, isAscending ->
-        val filteredList = currentHabits.filter {
-            it.name.contains(currentQuery, ignoreCase = true)
+    val filteredHabits: LiveData<List<Habit>> = habits.map { currentHabits ->
+        val filteredList = currentHabits.filter { it.name.contains(query.value, ignoreCase = true) }
+        when (sortOption.value) {
+            SortingType.NAME -> if (ascending.value) filteredList.sortedBy { it.name.lowercase() }
+            else filteredList.sortedByDescending { it.name.lowercase() }
+
+            SortingType.DATE -> if (ascending.value) filteredList.sortedBy { it.lastEdited }
+            else filteredList.sortedByDescending { it.lastEdited }
+
+            SortingType.PRIORITY -> if (ascending.value) filteredList.sortedBy { it.priority }
+            else filteredList.sortedByDescending { it.priority.ordinal }
         }
-
-        when (currentSortOption) {
-            SortingType.NAME -> {
-                if (isAscending) filteredList.sortedBy { it.name.lowercase(Locale.ROOT) }
-                else filteredList.sortedByDescending { it.name.lowercase(Locale.ROOT) }
-            }
-
-            SortingType.DATE -> {
-                if (isAscending) filteredList.sortedBy { it.lastEdited }
-                else filteredList.sortedByDescending { it.lastEdited }
-            }
-
-            SortingType.PRIORITY -> {
-                if (isAscending) filteredList.sortedBy { it.priority }
-                else filteredList.sortedByDescending { it.priority.ordinal }
-            }
-        }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, listOf())
+    }
 
     fun applyFilters(newQuery: String, newSortOption: SortingType, newAscending: Boolean) {
         query.value = newQuery

@@ -37,19 +37,25 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.doubletapp_hw.Habit
+import com.doubletapp_hw.HabitApplication
 import com.doubletapp_hw.HabitPriority
 import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
 import com.doubletapp_hw.viewModels.HabitEditViewModel
+import com.doubletapp_hw.viewModels.ViewModelFactory
 import java.time.LocalDateTime
 
 @Composable
 fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
-    val habitEditViewModel: HabitEditViewModel = viewModel()
+    val application = LocalContext.current.applicationContext as HabitApplication
+    val viewModelFactory = ViewModelFactory(application.habitRepository)
+    val habitEditViewModel: HabitEditViewModel = viewModel(factory = viewModelFactory)
     var habit by remember(habitId) {
         mutableStateOf(habitEditViewModel.getHabitById(habitId) ?: Habit())
     }
@@ -124,8 +130,8 @@ fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        ColorCard(selectedColor = habit.color, onColorSelected = {
-            habit = habit.copy(color = it)
+        ColorCard(selectedColor = Color(habit.color), onColorSelected = {
+            habit = habit.copy(color = it.toArgb())
         })
 
         Row(

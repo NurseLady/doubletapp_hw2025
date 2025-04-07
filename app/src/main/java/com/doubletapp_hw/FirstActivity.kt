@@ -1,5 +1,6 @@
 package com.doubletapp_hw
 
+import android.app.Application
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -39,12 +40,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.doubletapp_hw.db.AppDatabase
 import com.doubletapp_hw.screens.HabitEditScreen
 import com.doubletapp_hw.screens.HabitsPagerScreen
 import com.doubletapp_hw.screens.InfoScreen
 import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.ui.theme.Dobletapp_hwTheme
 import kotlinx.coroutines.launch
+
+class HabitApplication : Application() {
+    val database: AppDatabase by lazy { AppDatabase.getDatabase(this) }
+    val habitRepository: HabitRepository by lazy { HabitRepository(database.habitDao()) }
+}
 
 class FirstActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -139,6 +146,7 @@ fun AppNavigation() {
                 ) {
                     composable<Routes.Home> {
                         HabitsPagerScreen(
+                            // paddingValues = paddingValues,
                             onNavigate = { id ->
                                 navController.navigate(
                                     Routes.HabitEdit(id)
@@ -147,7 +155,7 @@ fun AppNavigation() {
                             showBottomSheet = showBottomSheet,
                             onShowBottomSheetChange = {
                                 showBottomSheet = it
-                            } // Обновляем состояние
+                            }
                         )
                     }
                     composable<Routes.Info> {
