@@ -27,8 +27,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -146,7 +146,7 @@ fun HabitListByTypeScreen(
     val application = LocalContext.current.applicationContext as HabitApplication
     val viewModelFactory = ViewModelFactory(application.habitRepository)
     val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
-    val habits by habitListViewModel.filteredHabits.observeAsState(emptyList())
+    val habits by habitListViewModel.filteredHabits.collectAsState(emptyList())
 
     val habitsOfType = habits.filter { it.type == type }
     Log.d("HabitList", "Filtered habits: ${habitsOfType.size}")
