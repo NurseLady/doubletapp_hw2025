@@ -36,4 +36,5 @@
     <string name="name">Название</string>
     <string name="date">Дата</string>
     <string name="search">Поиск</string>
+    <string name="delete">Удалить</string>
 </resources>

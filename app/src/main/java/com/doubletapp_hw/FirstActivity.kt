@@ -78,7 +78,6 @@ fun AppNavigation() {
 
     val items = listOf(Routes.Home, Routes.Info)
     var selectedItem by remember { mutableStateOf(items[0]) }
-
     var showBottomSheet by remember { mutableStateOf(false) }
 
     ModalNavigationDrawer(
@@ -146,7 +145,6 @@ fun AppNavigation() {
                 ) {
                     composable<Routes.Home> {
                         HabitsPagerScreen(
-                            // paddingValues = paddingValues,
                             onNavigate = { id ->
                                 navController.navigate(
                                     Routes.HabitEdit(id)

@@ -19,7 +19,7 @@ fun InfoScreen() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Привычки от Светика v0.4",
+            text = "Привычки от Светика v0.5",
             style = MaterialTheme.typography.headlineSmall
         )
     }

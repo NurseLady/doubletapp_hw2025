@@ -20,13 +20,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,98 +60,119 @@ fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
     val application = LocalContext.current.applicationContext as HabitApplication
     val viewModelFactory = ViewModelFactory(application.habitRepository)
     val habitEditViewModel: HabitEditViewModel = viewModel(factory = viewModelFactory)
-    var habit by remember(habitId) {
-        mutableStateOf(habitEditViewModel.getHabitById(habitId) ?: Habit())
-    }
+    val habitState by habitEditViewModel.habit.observeAsState(initial = null)
+    habitEditViewModel.loadHabitById(habitId)
+    val loading = habitState == null
 
-    val priorityOptions = HabitPriority.entries
-    val scrollState = rememberScrollState()
+    if (loading) {
+        CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+    } else {
+        var habit by remember { mutableStateOf(habitState ?: Habit()) }
+        val priorityOptions = HabitPriority.entries
+        val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        TextField(
-            value = habit.name,
-            onValueChange = { habit = habit.copy(name = it) },
-            label = { Text(stringResource(R.string.habit_name)) }
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            TextField(
+                value = habit.name,
+                onValueChange = { habit = habit.copy(name = it) },
+                label = { Text(stringResource(R.string.habit_name)) }
+            )
 
-        TextField(
-            value = habit.description,
-            onValueChange = { habit = habit.copy(description = it) },
-            label = { Text(stringResource(R.string.description)) }
-        )
+            TextField(
+                value = habit.description,
+                onValueChange = { habit = habit.copy(description = it) },
+                label = { Text(stringResource(R.string.description)) }
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Text(stringResource(R.string.priority))
-        DropdownMenuBox(
-            priorityOptions.map { stringResource(it.labelResId) },
-            habit.priority.ordinal) { selectedIndex ->
-            habit = habit.copy(priority = priorityOptions[selectedIndex])
-        }
-
-        Row(modifier = Modifier.padding(vertical = 8.dp)) {
-            RadioButtonGroup(
-                // Передаём сами элементы enum как опции
-                options = listOf(
-                    stringResource(R.string.positive),
-                    stringResource( R.string.negative)
-                ),
-                // Выбираем индекс текущего типа
-                selectedOption = stringResource( habit.type.labelResId)
+            Text(stringResource(R.string.priority))
+            DropdownMenuBox(
+                priorityOptions.map { stringResource(it.labelResId) },
+                habit.priority.ordinal
             ) { selectedIndex ->
-                // Устанавливаем тип привычки на основе выбранного индекса
-                habit = when(selectedIndex) {
-                    "Положительная" -> habit.copy(type = HabitType.POSITIVE)
-                    else-> habit.copy(type = HabitType.NEGATIVE)
+                habit = habit.copy(priority = priorityOptions[selectedIndex])
+            }
+
+            Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                RadioButtonGroup(
+                    // Передаём сами элементы enum как опции
+                    options = listOf(
+                        stringResource(R.string.positive),
+                        stringResource(R.string.negative)
+                    ),
+                    // Выбираем индекс текущего типа
+                    selectedOption = stringResource(habit.type.labelResId)
+                ) { selectedIndex ->
+                    // Устанавливаем тип привычки на основе выбранного индекса
+                    habit = when (selectedIndex) {
+                        "Положительная" -> habit.copy(type = HabitType.POSITIVE)
+                        else -> habit.copy(type = HabitType.NEGATIVE)
+                    }
                 }
             }
-        }
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextField(
-                value = habit.period,
-                onValueChange = { habit = habit.copy(period = it) },
-                label = { Text(stringResource(R.string.period)) },
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            TextField(
-                value = habit.frequency,
-                onValueChange = { habit = habit.copy(frequency = it) },
-                label = { Text(stringResource(R.string.frequency)) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        ColorCard(selectedColor = Color(habit.color), onColorSelected = {
-            habit = habit.copy(color = it.toArgb())
-        })
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = onBack
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.back))
+                TextField(
+                    value = habit.period,
+                    onValueChange = { habit = habit.copy(period = it) },
+                    label = { Text(stringResource(R.string.period)) },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                TextField(
+                    value = habit.frequency,
+                    onValueChange = { habit = habit.copy(frequency = it) },
+                    label = { Text(stringResource(R.string.frequency)) },
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            ColorCard(selectedColor = Color(habit.color), onColorSelected = {
+                habit = habit.copy(color = it.toArgb())
+            })
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = onBack
+                ) {
+                    Text(stringResource(R.string.back))
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Button(
+                    onClick = {
+                        val updatedHabit = habit.copy(
+                            id = habit.id,
+                            lastEdited = LocalDateTime.now()
+                        )
+                        habitEditViewModel.saveHabit(updatedHabit)
+                        onBack()
+                    }
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
@@ -155,11 +180,15 @@ fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
                         id = habit.id,
                         lastEdited = LocalDateTime.now()
                     )
-                    habitEditViewModel.saveHabit(updatedHabit)
+                    habitEditViewModel.deleteHabit(updatedHabit)
                     onBack()
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    containerColor = MaterialTheme.colorScheme.error
+                )
             ) {
-                Text(stringResource(R.string.save))
+                Text(stringResource(R.string.delete))
             }
         }
     }
