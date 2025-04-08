@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,16 @@ fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
     val viewModelFactory = ViewModelFactory(application.habitRepository)
     val habitEditViewModel: HabitEditViewModel = viewModel(factory = viewModelFactory)
     val habitState by habitEditViewModel.habit.observeAsState(initial = null)
-    habitEditViewModel.loadHabitById(habitId)
+
+    val isFirstLoad = remember { mutableStateOf(true) }
+
+    if (isFirstLoad.value) {
+        LaunchedEffect(habitId) {
+            habitEditViewModel.loadHabitById(habitId)
+            isFirstLoad.value = false
+        }
+    }
+
     val loading = habitState == null
 
     if (loading) {
