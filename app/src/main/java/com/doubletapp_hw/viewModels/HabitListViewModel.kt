@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class HabitListViewModel(private val habitRepository: HabitRepository) : ViewModel() {
     private val query = MutableStateFlow("")
@@ -42,6 +43,13 @@ class HabitListViewModel(private val habitRepository: HabitRepository) : ViewMod
         query.value = newQuery
         sortOption.value = newSortOption
         ascending.value = newAscending
+    }
+
+    //Насколько окэй так делать?
+    fun deleteHabit(habit: Habit) {
+        viewModelScope.launch {
+            habitRepository.deleteHabit(habit)
+        }
     }
 }
 

@@ -20,12 +20,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -171,32 +169,13 @@ fun HabitEditScreen(habitId: String, onBack: () -> Unit) {
                     Text(stringResource(R.string.save))
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    val updatedHabit = habit.copy(
-                        id = habit.id,
-                        lastEdited = LocalDateTime.now()
-                    )
-                    habitEditViewModel.deleteHabit(updatedHabit)
-                    onBack()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colorScheme.onError,
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text(stringResource(R.string.delete))
-            }
         }
     }
 }
 
 
 @Composable
-fun ColorCard(selectedColor: Color, onColorSelected: (Color) -> Unit){
+fun ColorCard(selectedColor: Color, onColorSelected: (Color) -> Unit) {
     var isColorPickerExpanded by remember { mutableStateOf(false) }
     Card(
         elevation = CardDefaults.cardElevation(

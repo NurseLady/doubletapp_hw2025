@@ -20,4 +20,4 @@ data class Habit(
     var period: String = "",
     var color: Int = Color(127, 127, 127, 255).toArgb(),
     var lastEdited: LocalDateTime = LocalDateTime.now()
-): Serializable
+) : Serializable

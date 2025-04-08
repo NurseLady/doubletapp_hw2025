@@ -93,10 +93,10 @@ fun AppNavigation() {
                         onClick = {
                             scope.launch { drawerState.close() }
                             selectedItem = item
-                            navController.navigate(item){
+                            navController.navigate(item) {
                                 popUpTo(0)
                             }
-                          },
+                        },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
                 }
@@ -161,8 +161,9 @@ fun AppNavigation() {
                     }
                     composable<Routes.HabitEdit> { backStackEntry ->
                         val edit: Routes.HabitEdit = backStackEntry.toRoute()
-                        HabitEditScreen(habitId = edit.id,
-                            onBack = { navController.popBackStack()})
+                        HabitEditScreen(
+                            habitId = edit.id,
+                            onBack = { navController.popBackStack() })
                     }
                 }
             }
