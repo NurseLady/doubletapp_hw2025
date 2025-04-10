@@ -1,6 +1,5 @@
 package com.doubletapp_hw.viewModels
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 class HabitListViewModel(private val habitRepository: HabitRepository) : ViewModel() {
-    val habits: LiveData<List<Habit>> = habitRepository.habits
     private val query = MutableStateFlow("")
     private val sortOption = MutableStateFlow(SortingType.NAME)
     private val ascending = MutableStateFlow(true)
