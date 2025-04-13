@@ -1,6 +1,5 @@
 package com.doubletapp_hw.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +37,6 @@ fun FilterAndSearchFragment(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(16.dp)
     ) {
         Text(text = stringResource(R.string.sort_by), style = MaterialTheme.typography.titleMedium)

@@ -37,14 +37,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.doubletapp_hw.Habit
+import com.doubletapp_hw.HabitApplication
 import com.doubletapp_hw.HabitType
 import com.doubletapp_hw.R
 import com.doubletapp_hw.SortingType
 import com.doubletapp_hw.viewModels.HabitListViewModel
+import com.doubletapp_hw.viewModels.ViewModelFactory
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -56,12 +59,15 @@ fun HabitsPagerScreen(
     showBottomSheet: Boolean,
     onShowBottomSheetChange: (Boolean) -> Unit
 ) {
+    val application = LocalContext.current.applicationContext as HabitApplication
+    val viewModelFactory = ViewModelFactory(application.habitRepository)
+    val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
+
     val coroutineScope = rememberCoroutineScope()
     val pages = HabitType.entries.toList()
     val pagerState = rememberPagerState { pages.size }
     val sheetState = rememberModalBottomSheetState()
     var inputText by remember { mutableStateOf("") }
-    val habitListViewModel: HabitListViewModel = viewModel()
 
     Scaffold(
         floatingActionButton = {
@@ -80,7 +86,9 @@ fun HabitsPagerScreen(
             // Вкладки для переключения между страницами
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 0.dp)
             ) {
                 pages.forEachIndexed { index, page ->
                     Tab(
@@ -135,8 +143,10 @@ fun HabitListByTypeScreen(
     type: HabitType,
     onNavigate: (String) -> Unit
 ) {
-    val habitListViewModel: HabitListViewModel = viewModel()
-    val habits by habitListViewModel.filteredHabits.collectAsState()
+    val application = LocalContext.current.applicationContext as HabitApplication
+    val viewModelFactory = ViewModelFactory(application.habitRepository)
+    val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
+    val habits by habitListViewModel.filteredHabits.collectAsState(emptyList())
 
     val habitsOfType = habits.filter { it.type == type }
     Log.d("HabitList", "Filtered habits: ${habitsOfType.size}")
@@ -174,7 +184,7 @@ fun HabitCard(habit: Habit, onClick: () -> Unit) {
             defaultElevation = 6.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(habit.color.value)
+            containerColor = Color(habit.color)
         ),
         modifier = Modifier
             .padding(8.dp)
@@ -185,19 +195,19 @@ fun HabitCard(habit: Habit, onClick: () -> Unit) {
             Text(
                 text = habit.name,
                 style = MaterialTheme.typography.headlineSmall,
-                color = if (habit.color.luminance() < 0.5) Color.White else Color.Black
+                color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black
             )
             Text(
                 text = habit.description,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (habit.color.luminance() < 0.5) Color.White else Color.Black,
+                color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
             )
             Text(
                 text = habit.lastEdited.format(
                     DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale("ru"))
                 ),
                 style = MaterialTheme.typography.bodySmall,
-                color = if (habit.color.luminance() < 0.5) Color.White else Color.Black,
+                color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
             )
         }
     }
