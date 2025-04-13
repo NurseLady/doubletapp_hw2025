@@ -1,6 +1,5 @@
 package com.doubletapp_hw.viewModels
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
@@ -37,7 +36,6 @@ class HabitListViewModel(private val habitRepository: HabitRepository) : ViewMod
             else filteredList.sortedByDescending { it.priority.ordinal }
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, listOf())
-
 
     fun applyFilters(newQuery: String, newSortOption: SortingType, newAscending: Boolean) {
         query.value = newQuery
