@@ -32,7 +32,6 @@ fun HomeScreen() {
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-    var inputText by remember { mutableStateOf("") }
 
     NavDrawer(
         screen = Routes.Home,
@@ -59,9 +58,7 @@ fun HomeScreen() {
                 sheetState = sheetState
             ) {
                 FilterAndSearchFragment(
-                    inputText = inputText,
-                    onTextChange = { newText -> inputText = newText },
-                    onSortingChange = { query: String, option: SortingType, isA: Boolean ->
+                    onApply = { query: String, option: SortingType, isA: Boolean ->
                         habitListViewModel.applyFilters(query, option, isA)
                         showBottomSheet = false
                     })
