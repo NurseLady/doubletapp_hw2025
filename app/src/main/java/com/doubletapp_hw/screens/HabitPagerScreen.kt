@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,10 +24,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -146,7 +151,7 @@ fun HabitListByTypeScreen(
     val application = LocalContext.current.applicationContext as HabitApplication
     val viewModelFactory = ViewModelFactory(application.habitRepository)
     val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
-    val habits by habitListViewModel.filteredHabits.collectAsState(emptyList())
+    val habits by habitListViewModel.filteredHabits.collectAsState()
 
     val habitsOfType = habits.filter { it.type == type }
     Log.d("HabitList", "Filtered habits: ${habitsOfType.size}")
@@ -168,13 +173,70 @@ fun HabitListByTypeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            items(habitsOfType) { habit ->
-                HabitCard(habit = habit) {
-                    onNavigate(habit.id)
+            items(
+                items = habitsOfType,
+                key = { it.id }
+            ) { habit ->
+                SwipeToDismissCardContainer(
+                    item = habit,
+                    onDelete = { habitListViewModel.deleteHabit(habit) }
+                ) {
+                    HabitCard(habit = habit) {
+                        onNavigate(habit.id)
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+fun SwipeToDismissCardContainer(
+    item: Habit,
+    onDelete: (Habit) -> Unit,
+    card: @Composable () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { newValue ->
+            if (newValue == SwipeToDismissBoxValue.StartToEnd) {
+                onDelete(item)
+                true
+            } else {
+                false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = Modifier,
+        backgroundContent = {
+            if (dismissState.dismissDirection.name == SwipeToDismissBoxValue.StartToEnd.name) {
+                Card(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    colors = CardDefaults
+                        .cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Удалить",
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+        },
+        enableDismissFromEndToStart = false,
+        content = { card() }
+    )
 }
 
 @Composable

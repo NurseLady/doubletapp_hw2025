@@ -78,7 +78,6 @@ fun AppNavigation() {
 
     val items = listOf(Routes.Home, Routes.Info)
     var selectedItem by remember { mutableStateOf(items[0]) }
-
     var showBottomSheet by remember { mutableStateOf(false) }
 
     ModalNavigationDrawer(
@@ -94,10 +93,10 @@ fun AppNavigation() {
                         onClick = {
                             scope.launch { drawerState.close() }
                             selectedItem = item
-                            navController.navigate(item){
+                            navController.navigate(item) {
                                 popUpTo(0)
                             }
-                          },
+                        },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
                 }
@@ -146,7 +145,6 @@ fun AppNavigation() {
                 ) {
                     composable<Routes.Home> {
                         HabitsPagerScreen(
-                            // paddingValues = paddingValues,
                             onNavigate = { id ->
                                 navController.navigate(
                                     Routes.HabitEdit(id)
@@ -163,8 +161,9 @@ fun AppNavigation() {
                     }
                     composable<Routes.HabitEdit> { backStackEntry ->
                         val edit: Routes.HabitEdit = backStackEntry.toRoute()
-                        HabitEditScreen(habitId = edit.id,
-                            onBack = { navController.popBackStack()})
+                        HabitEditScreen(
+                            habitId = edit.id,
+                            onBack = { navController.popBackStack() })
                     }
                 }
             }
