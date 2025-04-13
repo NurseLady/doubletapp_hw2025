@@ -1,12 +1,11 @@
 package com.doubletapp_hw.viewModels
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.doubletapp_hw.Habit
 import com.doubletapp_hw.HabitRepository
-import com.doubletapp_hw.SortingType
+import com.doubletapp_hw.enums.SortingType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +44,6 @@ class HabitListViewModel(private val habitRepository: HabitRepository) : ViewMod
         ascending.value = newAscending
     }
 
-    //Насколько окэй так делать?
     fun deleteHabit(habit: Habit) {
         viewModelScope.launch {
             habitRepository.deleteHabit(habit)

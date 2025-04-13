@@ -1,4 +1,4 @@
-package com.doubletapp_hw.screens
+package com.doubletapp_hw.screens.home
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.doubletapp_hw.R
-import com.doubletapp_hw.SortingType
+import com.doubletapp_hw.enums.SortingType
+import com.doubletapp_hw.screens.DropdownMenuBox
 
 @Composable
 fun FilterAndSearchFragment(

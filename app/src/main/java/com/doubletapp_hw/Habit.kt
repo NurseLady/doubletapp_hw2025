@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.doubletapp_hw.enums.HabitPriority
+import com.doubletapp_hw.enums.HabitType
 import java.io.Serializable
 import java.time.LocalDateTime
 import java.util.UUID

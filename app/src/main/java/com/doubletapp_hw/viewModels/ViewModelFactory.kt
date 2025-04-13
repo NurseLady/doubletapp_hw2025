@@ -4,7 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.doubletapp_hw.HabitRepository
 
-class ViewModelFactory(private val habitRepository: HabitRepository) : ViewModelProvider.Factory {
+//Тут я не стала исправлять по причине не нагугглила тот хороший вариант
+@Suppress("UNCHECKED_CAST")
+class ViewModelFactory(
+    private val habitRepository: HabitRepository,
+    private val habitId: String = ""
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
             modelClass.isAssignableFrom(HabitListViewModel::class.java) -> {
@@ -12,7 +17,7 @@ class ViewModelFactory(private val habitRepository: HabitRepository) : ViewModel
             }
 
             modelClass.isAssignableFrom(HabitEditViewModel::class.java) -> {
-                HabitEditViewModel(habitRepository) as T
+                HabitEditViewModel(habitRepository, habitId) as T
             }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class")
