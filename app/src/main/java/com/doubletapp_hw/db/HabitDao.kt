@@ -19,6 +19,12 @@ interface HabitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHabits(habits: List<Habit>)
+
     @Delete
     suspend fun deleteHabit(habit: Habit)
+
+    @Query("SELECT * FROM habits WHERE isDeleted = 1")
+    suspend fun getHabitsMarkedForDeletion(): List<Habit>
 }

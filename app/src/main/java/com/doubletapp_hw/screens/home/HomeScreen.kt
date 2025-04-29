@@ -23,11 +23,12 @@ import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.viewModels.HabitListViewModel
 import com.doubletapp_hw.viewModels.ViewModelFactory
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
     val application = LocalContext.current.applicationContext as HabitApplication
-    val viewModelFactory = ViewModelFactory(application.habitRepository)
+    val viewModelFactory = ViewModelFactory(application)
     val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
 
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -48,7 +49,8 @@ fun HomeScreen() {
             }
         }
     ) {
-        HabitPager()
+
+    HabitPager()
 
         if (showBottomSheet) {
             ModalBottomSheet(

@@ -23,6 +23,7 @@ class HabitEditViewModel(
 
     fun saveHabit(habit: Habit) {
         viewModelScope.launch {
+            habit.isSynced = false
             habitRepository.saveHabit(habit)
         }
     }

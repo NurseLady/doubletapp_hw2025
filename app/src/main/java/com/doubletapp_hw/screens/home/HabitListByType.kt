@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,14 +15,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,32 +45,41 @@ import com.doubletapp_hw.enums.HabitType
 import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.viewModels.HabitListViewModel
 import com.doubletapp_hw.viewModels.ViewModelFactory
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitListByType(type: HabitType) {
     val app = LocalContext.current.applicationContext as HabitApplication
     val navController = app.localNavController.current
-    val viewModelFactory = ViewModelFactory(app.habitRepository)
+    val viewModelFactory = ViewModelFactory(app)
     val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
     val habits by habitListViewModel.filteredHabits.collectAsStateWithLifecycle()
 
-    //Положив в ремембер получила проблему с неправильным обновлением списка
-    // после изменения типа
-    val habitsOfType = habits.filter { it.type == type } //TODO remember
+    val state = rememberPullToRefreshState()
+    val isRefreshing = habitListViewModel.syncState.value ?: false
 
-    if (habitsOfType.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.add_habit),
-                style = MaterialTheme.typography.headlineSmall
+    val habitsOfType by remember(habits, type) {
+        derivedStateOf { habits.filter { it.type == type } }
+    }
+
+    PullToRefreshBox(
+        state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = { habitListViewModel.syncHabitsWithServer() },
+        indicator = {
+            Indicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isRefreshing = isRefreshing,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                state = state
             )
-        }
-    } else {
+        },
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,12 +87,30 @@ fun HabitListByType(type: HabitType) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            items(
-                items = habitsOfType, key = { it.id }) { habit ->
-                SwipeToDismissCardContainer(
-                    item = habit, onDelete = { habitListViewModel.deleteHabit(habit) }) {
-                    HabitCard(habit = habit) {
-                        navController.navigate(Routes.HabitEdit(habit.id))
+            if (habitsOfType.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Spacer(Modifier.padding(24.dp))
+                        Text(
+                            text = stringResource(R.string.add_habit),
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                    }
+                }
+
+            } else {
+                items(
+                    items = habitsOfType,
+                    key = { it.id }
+                ) { habit ->
+                    SwipeToDismissCardContainer(
+                        item = habit, onDelete = { habitListViewModel.deleteHabit(habit) }) {
+                        HabitCard(habit = habit) {
+                            navController.navigate(Routes.HabitEdit(habit.id))
+                        }
                     }
                 }
             }
@@ -136,7 +170,7 @@ fun HabitCard(habit: Habit, onClick: () -> Unit) {
             .clickable { onClick() }) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = habit.name,
+                text = habit.title,
                 style = MaterialTheme.typography.headlineSmall,
                 color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black
             )
@@ -146,9 +180,11 @@ fun HabitCard(habit: Habit, onClick: () -> Unit) {
                 color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
             )
             Text(
-                text = habit.lastEdited.format(
-                    DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale("ru"))
-                ),
+                text = Instant.ofEpochMilli(habit.date)
+                    .atZone(ZoneId.systemDefault())
+                    .format(
+                        DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale("ru"))
+                    ),
                 style = MaterialTheme.typography.bodySmall,
                 color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
             )

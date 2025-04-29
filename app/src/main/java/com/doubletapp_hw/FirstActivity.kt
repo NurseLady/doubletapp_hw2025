@@ -11,11 +11,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.doubletapp_hw.apiUsage.HabitApiService
+import com.doubletapp_hw.apiUsage.RetrofitClient
 import com.doubletapp_hw.db.AppDatabase
 import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.screens.edit.HabitEditScreen
@@ -24,14 +27,33 @@ import com.doubletapp_hw.screens.info.InfoScreen
 import com.doubletapp_hw.ui.theme.Dobletapp_hwTheme
 
 class HabitApplication : Application() {
-    private val database: AppDatabase by lazy { AppDatabase.getDatabase(this) }
-    val habitRepository: HabitRepository by lazy { HabitRepository(database.habitDao()) }
+    lateinit var database: AppDatabase
+        private set
+    lateinit var habitRepository: HabitRepository
+        private set
+    lateinit var api: HabitApiService
+        private set
+
     val localNavController = compositionLocalOf<NavController> { error("No NavController found!") }
+
+    override fun onCreate() {
+        super.onCreate()
+        database = AppDatabase.getDatabase(this)
+        api = RetrofitClient.habitApi
+        habitRepository = HabitRepository(
+            database.habitDao(),
+            api = api,
+            token = BuildConfig.API_TOKEN,
+            context = applicationContext
+        )
+    }
 }
 
 class FirstActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             Dobletapp_hwTheme {
                 Surface(

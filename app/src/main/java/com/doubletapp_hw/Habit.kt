@@ -7,19 +7,22 @@ import androidx.room.PrimaryKey
 import com.doubletapp_hw.enums.HabitPriority
 import com.doubletapp_hw.enums.HabitType
 import java.io.Serializable
-import java.time.LocalDateTime
 import java.util.UUID
 
 
 @Entity(tableName = "habits")
 data class Habit(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    var name: String = "Привычка",
-    var description: String = "",
+    var serverId: String? = null,
+    var title: String = "Привычка",
+    var description: String = " ",
     var priority: HabitPriority = HabitPriority.LOW,
     var type: HabitType = HabitType.POSITIVE,
-    var frequency: String = "",
+    var frequency: Int? = null,
     var period: String = "",
     var color: Int = Color(127, 127, 127, 255).toArgb(),
-    var lastEdited: LocalDateTime = LocalDateTime.now()
+    var date: Long = System.currentTimeMillis(),
+    var isDeleted: Boolean = false,
+    var isSynced: Boolean = false,
+    var isNew: Boolean = true,
 ) : Serializable

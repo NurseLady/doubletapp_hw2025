@@ -26,7 +26,7 @@ fun InfoScreen() {
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "version-hw08.0",
+                    text = "version-hw08",
                     style = MaterialTheme.typography.headlineSmall
                 )
             }

@@ -4,15 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
-import androidx.room.TypeConverters
 import com.doubletapp_hw.Habit
-import com.squareup.wire.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
-@Database(entities = [Habit::class], version = 1, exportSchema = false)
-@TypeConverters(LocalDateTimeConverter::class)
+@Database(entities = [Habit::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
 
@@ -24,25 +18,11 @@ abstract class AppDatabase : RoomDatabase() {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext, AppDatabase::class.java, "habit_database"
-                ).build()
+                ).fallbackToDestructiveMigration(true)
+                    .build()
                 INSTANCE = instance
                 instance
             }
         }
-    }
-}
-
-
-class LocalDateTimeConverter {
-    @TypeConverter
-    fun fromTimestamp(value: Long?): LocalDateTime? {
-        return value?.let {
-            Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDateTime()
-        }
-    }
-
-    @TypeConverter
-    fun dateToTimestamp(date: LocalDateTime?): Long? {
-        return date?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
     }
 }

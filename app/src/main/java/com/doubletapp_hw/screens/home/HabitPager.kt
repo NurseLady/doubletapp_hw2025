@@ -37,6 +37,7 @@ fun HabitPager() {
     val pages = HabitType.entries.toList()
     val pagerState = rememberPagerState { pages.size }
 
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
@@ -66,7 +67,6 @@ fun HabitPager() {
                 }
             }
 
-            //ViewPager (HorizontalPager) для перелистывания между вкладками
             HorizontalPager(
                 state = pagerState, modifier = Modifier.weight(1f)
             ) { pageIndex ->
