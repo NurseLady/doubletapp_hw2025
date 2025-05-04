@@ -14,17 +14,11 @@ interface HabitDao {
     fun getAllHabits(): LiveData<List<Habit>>
 
     @Query("SELECT * FROM habits WHERE id = :id")
-    suspend fun getHabitById(id: String): Habit?
+    fun getHabitById(id: String): Habit?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHabit(habit: Habit)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHabits(habits: List<Habit>)
+    fun insertHabit(habit: Habit)
 
     @Delete
-    suspend fun deleteHabit(habit: Habit)
-
-    @Query("SELECT * FROM habits WHERE isDeleted = 1")
-    suspend fun getHabitsMarkedForDeletion(): List<Habit>
+    fun deleteHabit(habit: Habit)
 }
