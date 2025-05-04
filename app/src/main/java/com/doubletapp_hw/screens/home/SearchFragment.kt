@@ -1,4 +1,4 @@
-package com.doubletapp_hw.screens
+package com.doubletapp_hw.screens.home
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,16 +22,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.doubletapp_hw.R
-import com.doubletapp_hw.SortingType
+import com.doubletapp_hw.enums.SortingType
+import com.doubletapp_hw.screens.DropdownMenuBox
 
 @Composable
 fun FilterAndSearchFragment(
-    inputText: String,
-    onTextChange: (String) -> Unit,
-    onSortingChange: (String, SortingType, Boolean) -> Unit
+    onApply: (String, SortingType, Boolean) -> Unit
 ) {
     var selectedSortOption by remember { mutableStateOf(SortingType.NAME) }
     var isAscending by remember { mutableStateOf(true) }
+    var inputText by remember { mutableStateOf("") }
     val sortOptions = SortingType.entries
 
     Column(
@@ -66,14 +66,14 @@ fun FilterAndSearchFragment(
 
         TextField(
             value = inputText,
-            onValueChange = onTextChange,
+            onValueChange = { newText -> inputText = newText },
             label = { Text(stringResource(R.string.search_by_name)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Search
             ),
             keyboardActions = KeyboardActions(
-                onSearch = { onSortingChange(inputText, selectedSortOption, isAscending) }
+                onSearch = { onApply(inputText, selectedSortOption, isAscending) }
             )
         )
 
@@ -81,7 +81,7 @@ fun FilterAndSearchFragment(
 
         Button(
             onClick = {
-                onSortingChange(inputText, selectedSortOption, isAscending)
+                onApply(inputText, selectedSortOption, isAscending)
             },
             modifier = Modifier.align(Alignment.End)
         ) {
