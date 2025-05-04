@@ -49,7 +49,7 @@ class HabitListViewModel(private val habitRepository: HabitRepository) : ViewMod
             syncHabitsWithServer()
         }
     }
-
+    
     fun applyFilters(newQuery: String, newSortOption: SortingType, newAscending: Boolean) {
         query.value = newQuery
         sortOption.value = newSortOption
