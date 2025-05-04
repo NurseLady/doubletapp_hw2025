@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.doubletapp_hw.Habit
 import com.doubletapp_hw.HabitApplication
+import com.doubletapp_hw.LocalNavController
 import com.doubletapp_hw.R
 import com.doubletapp_hw.enums.HabitType
 import com.doubletapp_hw.screens.Routes
@@ -54,7 +55,7 @@ import java.util.Locale
 @Composable
 fun HabitListByType(type: HabitType) {
     val app = LocalContext.current.applicationContext as HabitApplication
-    val navController = app.localNavController.current
+    val navController = LocalNavController.current
     val viewModelFactory = ViewModelFactory(app)
     val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
     val habits by habitListViewModel.filteredHabits.collectAsStateWithLifecycle()
@@ -62,7 +63,7 @@ fun HabitListByType(type: HabitType) {
     val state = rememberPullToRefreshState()
     val isRefreshing = habitListViewModel.syncState.value ?: false
 
-    val habitsOfType by remember(habits, type) {
+    val habitsOfType by remember {
         derivedStateOf { habits.filter { it.type == type } }
     }
 
@@ -100,14 +101,15 @@ fun HabitListByType(type: HabitType) {
                         )
                     }
                 }
-
             } else {
                 items(
                     items = habitsOfType,
                     key = { it.id }
                 ) { habit ->
                     SwipeToDismissCardContainer(
-                        item = habit, onDelete = { habitListViewModel.deleteHabit(habit) }) {
+                        item = habit,
+                        onDelete = { habitListViewModel.deleteHabit(habit) }
+                    ) {
                         HabitCard(habit = habit) {
                             navController.navigate(Routes.HabitEdit(habit.id))
                         }
@@ -120,7 +122,9 @@ fun HabitListByType(type: HabitType) {
 
 @Composable
 fun SwipeToDismissCardContainer(
-    item: Habit, onDelete: (Habit) -> Unit, card: @Composable () -> Unit
+    item: Habit,
+    onDelete: (Habit) -> Unit,
+    card: @Composable () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { newValue ->
@@ -130,44 +134,66 @@ fun SwipeToDismissCardContainer(
             } else {
                 false
             }
-        })
+        }
+    )
 
-    SwipeToDismissBox(state = dismissState, modifier = Modifier, backgroundContent = {
-        if (dismissState.dismissDirection.name == SwipeToDismissBoxValue.StartToEnd.name) {
-            Card(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-            ) {
-                Row(
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = Modifier,
+        backgroundContent = {
+            if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
+                Card(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    ),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Удалить",
-                        tint = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Удалить",
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
                 }
             }
-        }
-    }, enableDismissFromEndToStart = false, content = { card() })
+        },
+        enableDismissFromEndToStart = false,
+        content = { card() }
+    )
 }
 
 @Composable
 fun HabitCard(habit: Habit, onClick: () -> Unit) {
+    val formattedDate by remember(habit.date) {
+        derivedStateOf {
+            Instant.ofEpochMilli(habit.date)
+                .atZone(ZoneId.systemDefault())
+                .format(
+                    DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale("ru"))
+                )
+        }
+    }
+
     Card(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
-        ), colors = CardDefaults.cardColors(
+        ),
+        colors = CardDefaults.cardColors(
             containerColor = Color(habit.color)
-        ), modifier = Modifier
+        ),
+        modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-            .clickable { onClick() }) {
+            .clickable(onClick = onClick)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = habit.title,
@@ -180,11 +206,7 @@ fun HabitCard(habit: Habit, onClick: () -> Unit) {
                 color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
             )
             Text(
-                text = Instant.ofEpochMilli(habit.date)
-                    .atZone(ZoneId.systemDefault())
-                    .format(
-                        DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm", Locale("ru"))
-                    ),
+                text = formattedDate,
                 style = MaterialTheme.typography.bodySmall,
                 color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
             )

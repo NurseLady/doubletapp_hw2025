@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.doubletapp_hw.HabitApplication
+import com.doubletapp_hw.LocalNavController
 import com.doubletapp_hw.R
 import com.doubletapp_hw.enums.HabitType
 import com.doubletapp_hw.screens.Routes
@@ -31,10 +32,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun HabitPager() {
     val app = LocalContext.current.applicationContext as HabitApplication
-    val navController = app.localNavController.current
+    val navController = LocalNavController.current
 
     val coroutineScope = rememberCoroutineScope()
-    val pages = HabitType.entries.toList()
+    val pages = HabitType.entries
     val pagerState = rememberPagerState { pages.size }
 
 

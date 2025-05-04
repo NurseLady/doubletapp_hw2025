@@ -39,6 +39,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.doubletapp_hw.HabitApplication
+import com.doubletapp_hw.LocalNavController
 import com.doubletapp_hw.R
 import kotlinx.coroutines.launch
 
@@ -50,7 +51,7 @@ fun NavDrawer(
     content: @Composable () -> Unit
 ) {
     val app = LocalContext.current.applicationContext as HabitApplication
-    val navController = app.localNavController.current
+    val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
