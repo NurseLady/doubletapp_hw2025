@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.doubletapp_hw.Habit
 import com.doubletapp_hw.HabitApplication
+import com.doubletapp_hw.LocalNavController
 import com.doubletapp_hw.R
 import com.doubletapp_hw.enums.HabitPriority
 import com.doubletapp_hw.enums.HabitType
@@ -45,7 +46,7 @@ import com.doubletapp_hw.viewModels.ViewModelFactory
 @Composable
 fun HabitEditScreen(habitId: String) {
     val app = LocalContext.current.applicationContext as HabitApplication
-    val navController = app.localNavController.current
+    val navController = LocalNavController.current
     val viewModelFactory =
         ViewModelFactory(app, habitId)
     val habitEditViewModel: HabitEditViewModel = viewModel(factory = viewModelFactory)

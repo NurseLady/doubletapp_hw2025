@@ -87,8 +87,8 @@ fun ColorCard(selectedColor: Color, onColorSelected: (Color) -> Unit) {
 
 @Composable
 fun ColorPicker(selectedColor: Color, onColorSelected: (Color) -> Unit) {
-    val colors = (0..15).map { Color.hsv(it * 360f / 16f, 1f, 1f) } // Цвета квадратов
-    val backgroundBrush = remember { Brush.horizontalGradient(colors.map { it }) }
+    val colors = remember { (0..15).map { Color.hsv(it * 360f / 16f, 1f, 1f) } }// Цвета квадратов
+    val backgroundBrush = remember { Brush.horizontalGradient(colors) }
 
     Box(
         modifier = Modifier

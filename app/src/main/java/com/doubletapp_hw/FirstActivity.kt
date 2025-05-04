@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -26,6 +25,10 @@ import com.doubletapp_hw.screens.home.HomeScreen
 import com.doubletapp_hw.screens.info.InfoScreen
 import com.doubletapp_hw.ui.theme.Dobletapp_hwTheme
 
+val LocalNavController = compositionLocalOf<NavController> {
+    error("No NavController found! Did you forget to provide NavController?")
+}
+
 class HabitApplication : Application() {
     lateinit var database: AppDatabase
         private set
@@ -33,8 +36,6 @@ class HabitApplication : Application() {
         private set
     lateinit var api: HabitApiService
         private set
-
-    val localNavController = compositionLocalOf<NavController> { error("No NavController found!") }
 
     override fun onCreate() {
         super.onCreate()
@@ -69,9 +70,8 @@ class FirstActivity : ComponentActivity() {
 @Composable
 fun AppNav() {
     val navController = rememberNavController()
-    val app = LocalContext.current.applicationContext as HabitApplication
 
-    CompositionLocalProvider(app.localNavController provides navController) {
+    CompositionLocalProvider(LocalNavController provides navController) {
         NavHost(
             navController = navController,
             startDestination = Routes.Home

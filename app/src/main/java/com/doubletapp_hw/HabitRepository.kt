@@ -1,6 +1,8 @@
 package com.doubletapp_hw
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
@@ -11,7 +13,6 @@ import com.doubletapp_hw.apiUsage.toLocalModel
 import com.doubletapp_hw.apiUsage.toNetworkModel
 import com.doubletapp_hw.db.HabitDao
 import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.delay
 import retrofit2.Response
 
@@ -22,8 +23,9 @@ class HabitRepository(
     private val context: Context, //Только для тоста
 ) {
     private companion object {
-        const val MAX_API_RETRIES = 5  // Максимальное количество попыток
-        const val RETRY_DELAY_MS = 5000L  // Задержка между попытками
+        const val MAX_API_RETRIES = 5
+        const val RETRY_DELAY_MS = 5000L
+        const val TAG = "HabitSync"
     }
 
     val habits: LiveData<List<Habit>> = habitDao.getAllHabits()
@@ -35,7 +37,6 @@ class HabitRepository(
     suspend fun saveHabit(habit: Habit) {
         habit.isSynced = false
         habitDao.insertHabit(habit)
-        //После сохранения локально сразу пытаемся отправить на сервер
         putHabitsToServer(listOf(habit))
     }
 
@@ -46,42 +47,56 @@ class HabitRepository(
         deleteHabitsOnServer(listOf(habit))
     }
 
+
     suspend fun syncWithServer() {
-        var serverHabits: List<Habit>? = null
-        var attempts = 0
-
-        //Пытаемся получить привычки с сервера
-        while (serverHabits == null && attempts < MAX_API_RETRIES) {
-            attempts++
-            try {
-                val response = api.getHabits(token)
-                if (response.isSuccessful) {
-                    serverHabits = response.body()?.map { it.toLocalModel() } ?: listOf()
-                } else {
-                    logApiError("GET habits failed", response)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            if (serverHabits == null) delay(RETRY_DELAY_MS)
-        }
-
-        if (serverHabits == null) {
-            Log.e("Sync", "Failed after $MAX_API_RETRIES attempts")
+        // Получаем привычки с сервера с повторными попытками
+        val serverHabits = fetchServerHabitsWithRetry() ?: run {
+            Log.e(TAG, "Failed to fetch habits after $MAX_API_RETRIES attempts")
             return
         }
 
-        //Получаем локальные привычки и объединяем их с привычками с сервера
-        val localHabits = habits.value ?: listOf()
+        // Синхронизируем с локальными данными
+        val localHabits = habits.value.orEmpty()
         val mergedHabits = mergeHabits(localHabits, serverHabits)
 
-        //Обновляем привычки в локальной бд
+        // Обновляем локальную базу данных
         habitDao.insertHabits(mergedHabits)
 
-        //Засылаем на сервер новые и не синхронизированные привычки
-        putHabitsToServer(mergedHabits.filter { it.isNew || !it.isSynced })
-        //Удаляем недоудалённое
-        deleteHabitsOnServer(habitDao.getHabitsMarkedForDeletion())
+        // Синхронизируем изменения с сервером
+        val unsyncedHabits = mergedHabits.filter { it.isNew || !it.isSynced }
+        if (unsyncedHabits.isNotEmpty()) {
+            putHabitsToServer(unsyncedHabits)
+        }
+
+        // Очищаем удаленные привычки
+        val habitsToDelete = habitDao.getHabitsMarkedForDeletion()
+        if (habitsToDelete.isNotEmpty()) {
+            deleteHabitsOnServer(habitsToDelete)
+        }
+    }
+
+    private suspend fun fetchServerHabitsWithRetry(): List<Habit>? {
+        repeat(MAX_API_RETRIES) { attempt ->
+            try {
+                val response = api.getHabits(token)
+                when {
+                    response.isSuccessful -> {
+                        return response.body()?.map { it.toLocalModel() }.orEmpty()
+                    }
+
+                    else -> {
+                        logApiError("GET habits failed", response)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Fetch habits attempt $attempt failed", e)
+            }
+
+            if (attempt < MAX_API_RETRIES - 1) {
+                delay(RETRY_DELAY_MS)
+            }
+        }
+        return null
     }
 
     private fun mergeHabits(local: List<Habit>, remote: List<Habit>): List<Habit> {
@@ -113,108 +128,121 @@ class HabitRepository(
     }
 
     private suspend fun putHabitsToServer(habits: List<Habit>) {
-        //Отладочный тост
-        Toast.makeText(
-            context,
-            "Обновление данных...",
-            Toast.LENGTH_SHORT
-        ).show()
+        showToast(context, "Обновление данных...")
 
-        for (habit in habits) {
-            Log.d("!!!", habit.toString())
-            Log.d("!!!", habit.toNetworkModel().toString())
+        habits.forEach { habit ->
+            Log.v(TAG, "Syncing habit: $habit")
+            Log.v(TAG, "Network model: ${habit.toNetworkModel()}")
 
-            var success = false
-            var attempts = 0
-            while (!success && attempts < MAX_API_RETRIES) {
-                attempts++
-                try {
+            runWithRetry(
+                operation = { attempt ->
                     val response = api.putHabit(token, habit.toNetworkModel())
-                    //Если успешно заслали привычку на сервер
+
                     if (response.isSuccessful) {
-                        val uid = response.body()?.uid
-                        //Если привычка была новой локально
-                        if (habit.isNew && uid != null) {
-                            deleteHabit(habit.copy(isSynced = true)) //Удаляем привычку с локальным id
-                            habitDao.insertHabit(
-                                habit.copy(
-                                    id = uid,
-                                    isSynced = true,
-                                    isNew = false
-                                )
-                            )//Добавляем её с id от сервера как не новую
-                        } else if (!habit.isSynced) { //Если не новая, то просто помечаем как синхронизированную
-                            habitDao.insertHabit(habit.copy(isSynced = true))
-                        }
-                        success = true
+                        handleSuccessfulPut(habit, response.body()?.uid)
+                        Result.success(Unit)
                     } else {
                         logApiError("PUT habit failed", response)
+                        Result.failure(RuntimeException("PUT failed with code ${response.code()}"))
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                if (!success) delay(RETRY_DELAY_MS)
+                },
+                onFailure = { e -> Log.e(TAG, "Failed to sync habit ${habit.id}", e) }
+            )
+        }
+    }
+
+    private suspend fun handleSuccessfulPut(habit: Habit, uid: String?) {
+        when {
+            habit.isNew && uid != null -> {
+                // Обновляем привычку с серверным ID
+                habitDao.updateHabit(habit, uid)
+            }
+
+            !habit.isSynced -> {
+                // Просто помечаем как синхронизированную
+                habitDao.insertHabit(habit.copy(isSynced = true))
             }
         }
     }
+
 
     private suspend fun deleteHabitsOnServer(habits: List<Habit>) {
-        var c = 0
-        for (habit in habits) {
-            var success = false
-            var attempts = 0
-            c++
-            while (!success && attempts < MAX_API_RETRIES) {
-                attempts++
-                Log.d("del", "$habits $c $attempts")
-                if (habit.isNew) {
-                    habitDao.deleteHabit(habit)
-                    success = true
-                    break
-                }
-                try {
+        habits.forEach { habit ->
+            if (habit.isNew) {
+                habitDao.deleteHabit(habit)
+                return@forEach
+            }
+
+            runWithRetry(
+                operation = { attempt ->
                     val response = api.deleteHabit(token, HabitUID(habit.id))
-                    if (response.isSuccessful) {
-                        habitDao.deleteHabit(habit)
-                        success = true
-                    } else {
-                        val errorMessage = response.errorBody()?.string()
-                        val parsed = parseError(errorMessage)
-                        //Если привычки с таким id уже нет на сервере, то локально тоже удалим
-                        if (parsed.message.contains("No habit with id")) {
+
+                    when {
+                        response.isSuccessful -> {
                             habitDao.deleteHabit(habit)
-                            success = true
+                            Result.success(Unit)
                         }
-                        logApiError("DELETE habit failed", response)
-                        logApiError("del", response)
+
+                        response.code() == 404 -> {
+                            // Привычка уже удалена на сервере
+                            habitDao.deleteHabit(habit)
+                            Result.success(Unit)
+                        }
+
+                        else -> {
+                            val error = parseError(response.errorBody()?.string())
+                            logApiError("DELETE failed", response, error)
+                            Result.failure(RuntimeException("API error: ${error.message}"))
+                        }
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                if (!success) delay(RETRY_DELAY_MS)
+                },
+                onFailure = { e -> Log.e(TAG, "Failed to delete habit ${habit.id}", e) }
+            )
+        }
+    }
+
+    private suspend fun <T> runWithRetry(
+        maxRetries: Int = MAX_API_RETRIES,
+        delayMs: Long = RETRY_DELAY_MS,
+        operation: suspend (attempt: Int) -> Result<T>,
+        onFailure: (Throwable) -> Unit = {}
+    ): Result<T> {
+        repeat(maxRetries) { attempt ->
+            val result = operation(attempt)
+            if (result.isSuccess) return result
+
+            if (attempt < maxRetries - 1) delay(delayMs)
+        }
+
+        return operation(maxRetries - 1).also {
+            if (it.isFailure) onFailure(it.exceptionOrNull() ?: Exception("Unknown error"))
+        }
+    }
+
+    private fun showToast(context: Context, message: String) {
+        with(Toast.makeText(context, message, Toast.LENGTH_SHORT)) {
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                show()
+            } else {
+                Handler(Looper.getMainLooper()).post { show() }
             }
         }
     }
 
-    private fun logApiError(tag: String, response: Response<*>) {
-        val errorMessage = response.errorBody()?.string()
-        val parsed = parseError(errorMessage)
+    private fun logApiError(tag: String, response: Response<*>, error: ErrorResponse? = null) {
+        val errorMessage = error?.message ?: response.message()
         Log.e(
-            tag,
-            "code=${response.code()}, message=${response.message()}, server=${parsed.message}"
+            TAG,
+            "$tag: code=${response.code()}, message=$errorMessage"
         )
     }
 
     private fun parseError(errorBody: String?): ErrorResponse {
-        val gson = Gson()
         return try {
-            errorBody?.let {
-                gson.fromJson(it, ErrorResponse::class.java)
-            } ?: ErrorResponse(-1, "Unknown error")
-        } catch (e: JsonSyntaxException) {
-            ErrorResponse(-1, "Failed to parse error: ${e.message}")
+            errorBody?.let { Gson().fromJson(it, ErrorResponse::class.java) }
+                ?: ErrorResponse(-1, "Unknown error")
         } catch (e: Exception) {
-            ErrorResponse(-1, "An unexpected error occurred: ${e.message}")
+            ErrorResponse(-1, "Failed to parse error: ${e.message ?: "Unknown parsing error"}")
         }
     }
 }

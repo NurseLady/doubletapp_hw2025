@@ -6,6 +6,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.doubletapp_hw.Habit
 
 @Dao
@@ -27,4 +28,16 @@ interface HabitDao {
 
     @Query("SELECT * FROM habits WHERE isDeleted = 1")
     suspend fun getHabitsMarkedForDeletion(): List<Habit>
+
+    @Transaction
+    suspend fun updateHabit(habit: Habit, uid: String) {
+        deleteHabit(habit)
+        insertHabit(
+            habit.copy(
+                id = uid,
+                isSynced = true,
+                isNew = false
+            )
+        )
+    }
 }
