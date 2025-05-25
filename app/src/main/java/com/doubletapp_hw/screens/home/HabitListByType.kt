@@ -1,5 +1,7 @@
 package com.doubletapp_hw.screens.home
 
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,12 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -26,6 +31,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -36,16 +42,13 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.doubletapp_hw.Habit
-import com.doubletapp_hw.HabitApplication
 import com.doubletapp_hw.LocalNavController
 import com.doubletapp_hw.R
 import com.doubletapp_hw.enums.HabitType
-import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.viewModels.HabitListViewModel
-import com.doubletapp_hw.viewModels.ViewModelFactory
+import com.example.domain.Habit
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -54,17 +57,24 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitListByType(type: HabitType) {
-    val app = LocalContext.current.applicationContext as HabitApplication
     val navController = LocalNavController.current
-    val viewModelFactory = ViewModelFactory(app)
-    val habitListViewModel: HabitListViewModel = viewModel(factory = viewModelFactory)
+    val habitListViewModel: HabitListViewModel = hiltViewModel()
     val habits by habitListViewModel.filteredHabits.collectAsStateWithLifecycle()
 
     val state = rememberPullToRefreshState()
-    val isRefreshing = habitListViewModel.syncState.value ?: false
+    val isRefreshing = habitListViewModel.syncState.value
+
+    val context = LocalContext.current
+
+    LaunchedEffect(habitListViewModel.toastMessage.value) {
+        habitListViewModel.toastMessage.value?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            habitListViewModel.clearToast()
+        }
+    }
 
     val habitsOfType by remember {
-        derivedStateOf { habits.filter { it.type == type } }
+        derivedStateOf { habits.filter { it.type == type.ordinal } }
     }
 
     PullToRefreshBox(
@@ -110,9 +120,15 @@ fun HabitListByType(type: HabitType) {
                         item = habit,
                         onDelete = { habitListViewModel.deleteHabit(habit) }
                     ) {
-                        HabitCard(habit = habit) {
-                            navController.navigate(Routes.HabitEdit(habit.id))
-                        }
+                        HabitCard(
+                            habit = habit,
+                            onClick = {
+                                navController.navigate("habit_edit/${habit.id}")
+                            },
+                            onDone = {
+                                habitListViewModel.markHabitDone(habit)
+                            }
+                        )
                     }
                 }
             }
@@ -169,9 +185,8 @@ fun SwipeToDismissCardContainer(
         content = { card() }
     )
 }
-
 @Composable
-fun HabitCard(habit: Habit, onClick: () -> Unit) {
+fun HabitCard(habit: Habit, onClick: () -> Unit, onDone: () -> Unit) {
     val formattedDate by remember(habit.date) {
         derivedStateOf {
             Instant.ofEpochMilli(habit.date)
@@ -194,22 +209,56 @@ fun HabitCard(habit: Habit, onClick: () -> Unit) {
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = habit.title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black
-            )
-            Text(
-                text = habit.description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
-            )
-            Text(
-                text = formattedDate,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = habit.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black
+                )
+                Text(
+                    text = habit.description,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
+                )
+                Text(
+                    text = formattedDate,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black,
+                )
+            }
+            OutlinedButton(
+                onClick = { onDone() },
+                modifier = Modifier.padding(end = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(habit.color),
+                    contentColor = if (Color(habit.color).luminance() < 0.5) Color.White else Color.Black
+                ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = if (Color(habit.color).luminance() < 0.5)
+                        Color.White
+                    else
+                        Color.Black
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.done),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Выполнить"
+                )
+            }
         }
     }
 }

@@ -1,8 +1,6 @@
-package com.doubletapp_hw.apiUsage
+package com.example.data.remote
 
-import com.doubletapp_hw.Habit
-import com.doubletapp_hw.enums.HabitPriority
-import com.doubletapp_hw.enums.HabitType
+import com.example.data.local.HabitEntity
 import java.util.UUID
 
 data class HabitUID(val uid: String)
@@ -22,28 +20,29 @@ data class NetworkHabit(
     val uid: String?
 )
 
-fun Habit.toNetworkModel(): NetworkHabit = NetworkHabit(
+fun HabitEntity.toNetworkModel(): NetworkHabit = NetworkHabit(
     color = this.color,
-    count = 0,
+    count = this.count ?: 0,
     date = (this.date / 1000).toInt(),
     description = if (this.description == "") " " else this.description,
-    done_dates = listOf(),
+    done_dates = this.done_dates,
     frequency = this.frequency ?: 0,
-    priority = this.priority.ordinal,
+    priority = this.priority,
     title = this.title,
-    type = this.type.ordinal,
+    type = this.type,
     uid = if (this.isNew) null else this.id
 )
 
-fun NetworkHabit.toLocalModel(): Habit = Habit(
+fun NetworkHabit.toLocalModel(): HabitEntity = HabitEntity(
     id = this.uid ?: UUID.randomUUID().toString(),
     serverId = this.uid,
     title = this.title,
     description = this.description,
-    priority = HabitPriority.entries[this.priority],
-    type = HabitType.entries[this.type],
+    done_dates = this.done_dates,
+    priority = this.priority,
+    type = this.type,
     frequency = this.frequency,
-    period = "",
+    count = this.count,
     color = this.color,
     date = this.date.toLong() * 1000
 )
