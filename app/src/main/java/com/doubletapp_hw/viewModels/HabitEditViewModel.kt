@@ -2,29 +2,38 @@ package com.doubletapp_hw.viewModels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.doubletapp_hw.Habit
-import com.doubletapp_hw.HabitRepository
+import com.example.domain.Habit
+import com.example.domain.usecase.GetHabitUseCase
+import com.example.domain.usecase.SaveHabitUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class HabitEditViewModel(
-    private val habitRepository: HabitRepository,
-    private val habitId: String
+@HiltViewModel
+class HabitEditViewModel @Inject constructor(
+    private val saveHabitUseCase: SaveHabitUseCase,
+    private val getHabitsUseCase: GetHabitUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _habit = MutableLiveData<Habit>()
     val habit: LiveData<Habit> = _habit
+    val habitIdLiveData = savedStateHandle.getLiveData<String>("id")
 
     init {
-        viewModelScope.launch {
-            _habit.value = habitRepository.getHabitById(habitId) ?: Habit()
+        habitIdLiveData.observeForever { id ->
+            viewModelScope.launch {
+                _habit.value = getHabitsUseCase(id) ?: Habit()
+            }
         }
     }
 
     fun saveHabit(habit: Habit) {
         viewModelScope.launch {
             habit.isSynced = false
-            habitRepository.saveHabit(habit)
+            saveHabitUseCase(habit)
         }
     }
 }
