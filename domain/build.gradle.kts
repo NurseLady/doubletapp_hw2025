@@ -21,4 +21,17 @@ dependencies {
     implementation("com.google.dagger:dagger:$dagger_ver")
     ksp("com.google.dagger:dagger-compiler:$dagger_ver")
     implementation("com.squareup:javapoet:1.13.0")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.10.2")
+
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.9.22")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.22")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+
+    testImplementation("io.mockk:mockk:1.13.10")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
+    testImplementation("com.google.truth:truth:1.4.2")
 }
