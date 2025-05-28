@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "dobletapp_hw"
-include(":app")
- 
+include(":app", ":domain", ":data")

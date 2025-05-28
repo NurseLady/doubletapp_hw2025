@@ -8,8 +8,7 @@
     <string name="priority">Приоритет</string>
     <string name="positive">Положительная</string>
     <string name="negative">Отрицательная</string>
-    <string name="frequency">Количество</string>
-    <string name="period">Периодичность</string>
+    <string name="frequency">Во сколько дней</string>
     <string name="back">Назад</string>
     <string name="save">Сохранить</string>
     <string name="pick_colour">Выбрать цвет</string>
@@ -37,4 +36,6 @@
     <string name="date">Дата</string>
     <string name="search">Поиск</string>
     <string name="delete">Удалить</string>
+    <string name="count">Сколько раз</string>
+    <string name="done">Сделано</string>
 </resources>
