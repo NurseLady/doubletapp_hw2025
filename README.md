@@ -179,13 +179,12 @@ Backend API:
 
 ## Запуск проекта
 
-### 1. Склонировать репозиторий:
-
 #### Требования
 - Android Studio Flamingo или выше
 - JDK 17
 - Android SDK 34+
-
+- 
+### 1. Склонировать репозиторий:
 ```bash
 git clone https://github.com/NurseLady/doubletapp_hw2025.git
 ```
