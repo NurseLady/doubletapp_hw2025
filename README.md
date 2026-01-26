@@ -40,7 +40,7 @@
 
 ---
 
-## 🛠 Используемые технологии
+## Используемые технологии
 
 * Kotlin
 * Jetpack Compose (100% Compose UI)
@@ -170,7 +170,7 @@ Backend API:
 * UI-тест одного из экранов
 
 Реализовано:
-* Unit-тесты для всех use cases (доменный слой)
+* Unit-тесты для всех use cases (модуль domain)
 * UI-тесты для экрана редактирования привычки (Compose UI тесты)
 * Использование createComposeRule для тестирования Compose интерфейсов
 * Mocking ViewModel и навигации с помощью MockK
