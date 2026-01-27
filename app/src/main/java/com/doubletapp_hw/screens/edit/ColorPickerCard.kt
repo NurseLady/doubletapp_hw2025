@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.doubletapp_hw.R
@@ -105,7 +106,7 @@ fun ColorPicker(selectedColor: Color, onColorSelected: (Color) -> Unit) {
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            colors.forEach { color ->
+            colors.forEachIndexed { index, color ->
                 Box( // Комбо-вомбо из двух вложенных боксов чтоб обводка квадратов красивая была
                     modifier = Modifier
                         .size(70.dp)
@@ -116,6 +117,7 @@ fun ColorPicker(selectedColor: Color, onColorSelected: (Color) -> Unit) {
                 ) {
                     Box(
                         modifier = Modifier
+                            .testTag("colorPickerBox_$index")
                             .fillMaxSize()
                             .padding(2.dp)
                             .background(

@@ -38,7 +38,7 @@ class MarkHabitDoneUseCase @Inject constructor(
         val currentTimeSec = (System.currentTimeMillis() / 1000).toInt()
         val periodStart = currentTimeSec - periodSeconds
 
-        val currentCount = habit.done_dates.count { it in periodStart..currentTimeSec }
+        val currentCount = habit.done_dates.count { it in periodStart..currentTimeSec } + 1
         val targetCount = habit.count ?: 0
 
         return currentCount.coerceAtLeast(0) to targetCount.coerceAtLeast(0)

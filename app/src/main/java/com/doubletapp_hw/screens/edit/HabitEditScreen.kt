@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -41,15 +42,16 @@ import com.doubletapp_hw.viewModels.HabitEditViewModel
 import com.example.domain.Habit
 
 @Composable
-fun HabitEditScreen() {
+fun HabitEditScreen(habitEditViewModel: HabitEditViewModel = hiltViewModel()) {
     val navController = LocalNavController.current
-    val habitEditViewModel: HabitEditViewModel = hiltViewModel()
     val habitState by habitEditViewModel.habit.observeAsState(initial = null)
 
     val loading = habitState == null
 
     if (loading) {
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        LinearProgressIndicator(modifier = Modifier
+            .fillMaxWidth()
+            .testTag("ProgressIndicator"))
     } else {
         var habit by remember { mutableStateOf(habitState ?: Habit()) }
         val priorityOptions = HabitPriority.entries
@@ -68,12 +70,16 @@ fun HabitEditScreen() {
             TextField(
                 value = habit.title,
                 onValueChange = { habit = habit.copy(title = it) },
-                label = { Text(stringResource(R.string.habit_name)) })
+                label = { Text(stringResource(R.string.habit_name)) },
+                modifier = Modifier.testTag("habitTitleTextField")
+            )
 
             TextField(
                 value = habit.description,
                 onValueChange = { habit = habit.copy(description = it) },
-                label = { Text(stringResource(R.string.description)) })
+                label = { Text(stringResource(R.string.description)) },
+                modifier = Modifier.testTag("habitDescriptionTextField")
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -114,7 +120,9 @@ fun HabitEditScreen() {
 
                     },
                     label = { Text(stringResource(R.string.count)) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("countTextField"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -128,7 +136,9 @@ fun HabitEditScreen() {
 
                     },
                     label = { Text(stringResource(R.string.frequency)) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("frequencyTextField"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
