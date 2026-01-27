@@ -1,12 +1,11 @@
-package com.doubletapp_hw.db
+package com.example.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.doubletapp_hw.Habit
 
-@Database(entities = [Habit::class], version = 2, exportSchema = false)
+@Database(entities = [HabitEntity::class], version = 5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
 

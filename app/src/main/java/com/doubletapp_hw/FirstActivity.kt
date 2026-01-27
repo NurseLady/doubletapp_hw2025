@@ -12,49 +12,31 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
-import com.doubletapp_hw.apiUsage.HabitApiService
-import com.doubletapp_hw.apiUsage.RetrofitClient
-import com.doubletapp_hw.db.AppDatabase
+import androidx.navigation.navArgument
 import com.doubletapp_hw.screens.Routes
 import com.doubletapp_hw.screens.edit.HabitEditScreen
 import com.doubletapp_hw.screens.home.HomeScreen
 import com.doubletapp_hw.screens.info.InfoScreen
 import com.doubletapp_hw.ui.theme.Dobletapp_hwTheme
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
 
 val LocalNavController = compositionLocalOf<NavController> {
     error("No NavController found! Did you forget to provide NavController?")
 }
 
-class HabitApplication : Application() {
-    lateinit var database: AppDatabase
-        private set
-    lateinit var habitRepository: HabitRepository
-        private set
-    lateinit var api: HabitApiService
-        private set
+@HiltAndroidApp
+class HabitApplication : Application()
 
-    override fun onCreate() {
-        super.onCreate()
-        database = AppDatabase.getDatabase(this)
-        api = RetrofitClient.habitApi
-        habitRepository = HabitRepository(
-            database.habitDao(),
-            api = api,
-            token = BuildConfig.API_TOKEN,
-            context = applicationContext
-        )
-    }
-}
-
+@AndroidEntryPoint
 class FirstActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
         setContent {
             Dobletapp_hwTheme {
                 Surface(
@@ -82,9 +64,11 @@ fun AppNav() {
             composable<Routes.Info> {
                 InfoScreen()
             }
-            composable<Routes.HabitEdit> { backStackEntry ->
-                val edit: Routes.HabitEdit = backStackEntry.toRoute()
-                HabitEditScreen(edit.id)
+            composable(
+                route = "habit_edit/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.StringType })
+            ) { backStackEntry ->
+                HabitEditScreen()
             }
         }
     }

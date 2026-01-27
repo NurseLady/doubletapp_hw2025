@@ -1,4 +1,4 @@
-package com.doubletapp_hw.apiUsage
+package com.example.data.remote
 
 import retrofit2.Response
 import retrofit2.http.Body
